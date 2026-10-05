@@ -68,7 +68,7 @@ private fun MessageBar() {
             .background(Color.White).padding(start = 18.dp, end = 7.dp, top = 7.dp, bottom = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WeSeeText("Pergunte para Navi algum lugar novo...", Color(0xFF9AA7B4), 12, Modifier.weight(1f), textAlign = TextAlign.Start)
+        WeSeeText("Pergunte para Navi algum lugar novo...", Color(0xFF9AA7B4), 12, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
         Box(Modifier.size(36.dp).clip(CircleShape).background(WeSeeBlue), contentAlignment = Alignment.Center) {
             Image(painterResource(R.drawable.ic_arrow_up), "Enviar, disponível em breve", Modifier.size(20.dp))
         }
