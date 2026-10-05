@@ -11,3 +11,9 @@ val HostGrotesk = FontFamily(
     Font(R.font.host_grotesk_bold, FontWeight.Bold),
     Font(R.font.host_grotesk_extrabold, FontWeight.ExtraBold),
 )
+
+val IstokWeb = FontFamily(
+    Font(R.font.istok_web_regular, FontWeight.Normal),
+    Font(R.font.istok_web_bold, FontWeight.Bold),
+)
+val WeSeeMid = androidx.compose.ui.graphics.Color(0xFF3F78B5)
