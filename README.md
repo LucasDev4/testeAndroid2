@@ -23,3 +23,8 @@ Textos das telas do responsável ficam em `res/values/strings.xml`. Imagens em `
 
 com.wesee.app.data    UserStore, Notes (NotesStore)
 com.wesee.app.device  Battery (bateria real + estimativa)
+
+## Mapa (Google Maps Platform)
+Ative no Google Cloud: **Maps SDK for Android**, **Places API (New)** e **Routes API**. Restrinja a chave ao pacote `com.wesee.app`.
+A chave NÃO fica no código: use a variável de ambiente `MAPS_API_KEY` (no GitHub: Settings → Secrets and variables → Actions → New repository secret)
+ou `MAPS_API_KEY=...` em `local.properties` (já no .gitignore).
