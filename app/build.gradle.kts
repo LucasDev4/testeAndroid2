@@ -10,7 +10,10 @@ val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
-val mapsKey: String = System.getenv("MAPS_API_KEY") ?: localProps.getProperty("MAPS_API_KEY") ?: ""
+val mapsKey: String = System.getenv("MAPS_API_KEY")?.takeIf { it.isNotBlank() } ?: localProps.getProperty("MAPS_API_KEY") ?: ""
+// URL do backend (Spring Boot). Emulador: http://10.0.2.2:8080/ | celular real: http://IP-DO-PC:8080/
+val apiBaseUrl: String = System.getenv("API_BASE_URL")?.takeIf { it.isNotBlank() }
+    ?: localProps.getProperty("API_BASE_URL") ?: "http://10.0.2.2:8080/"
 
 android {
     namespace = "com.wesee.app"
@@ -23,6 +26,7 @@ android {
         versionName = "1.0"
         manifestPlaceholders["MAPS_API_KEY"] = mapsKey
         buildConfigField("String", "MAPS_API_KEY", "\"$mapsKey\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -45,6 +49,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui-tooling-preview")

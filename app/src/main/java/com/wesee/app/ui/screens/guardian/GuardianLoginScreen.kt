@@ -14,19 +14,56 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
+import com.wesee.app.network.ApiResult
+import com.wesee.app.network.AtlasApi
+import com.wesee.app.network.AuthSession
+import com.wesee.app.network.UserType
 import com.wesee.app.ui.components.*
 import com.wesee.app.ui.theme.WeSeeCard
 import com.wesee.app.ui.theme.WeSeeSoftText
+import kotlinx.coroutines.launch
 
-/** Tela 3 — Login do responsável. */
+internal val ErrorColor = Color(0xFFFFC9C9)
+internal val OkColor = Color(0xFFBFF0CE)
+
+/** Tela 3 — Login do responsável (/auth/login). A área do responsável será feita depois. */
 @Composable
 fun GuardianLoginScreen(
-    onLogin: (email: String, password: String) -> Unit = { _, _ -> },
+    onLoggedIn: (AuthSession) -> Unit = {},
     onForgotPassword: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
 ) {
+    val scope = rememberCoroutineScope()
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var message by remember { mutableStateOf<Pair<String, Boolean>?>(null) } // texto, éSucesso
+    var loading by remember { mutableStateOf(false) }
+
+    fun submit() {
+        if (loading) return
+        if (!email.contains("@")) { message = "Informe um e-mail válido." to false; return }
+        if (password.isBlank()) { message = "Informe sua senha." to false; return }
+        scope.launch {
+            loading = true; message = null
+            when (val r = AtlasApi.login(email.trim(), password)) {
+                is ApiResult.Success ->
+                    if (r.value.tipo == UserType.RESPONSAVEL) {
+                        message = "Login realizado! A área do responsável chega em breve." to true
+                        onLoggedIn(r.value)
+                    } else message = "Essa conta é de usuário PCD. Entre pelo modo PCD visual." to false
+                is ApiResult.Error -> {
+                    val text = when (r.code) {
+                        401, 404 -> "E-mail ou senha incorretos."
+                        -1 -> "Sem conexão com o servidor."
+                        else -> r.fields.values.firstOrNull() ?: r.message
+                    }
+                    message = text to false
+                }
+            }
+            loading = false
+        }
+    }
+
     Column(Modifier.fillMaxSize().background(WeSeeCard).imePadding()) {
         Column(Modifier.weight(1f).fillMaxWidth().statusBarsPadding(),
             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
@@ -46,8 +83,12 @@ fun GuardianLoginScreen(
             Spacer(Modifier.height(6.dp))
             WeSeeText(stringResource(R.string.forgot_password), WeSeeSoftText, 11,
                 modifier = Modifier.clickable(onClick = onForgotPassword), textAlign = TextAlign.Start)
+            message?.let { (text, ok) ->
+                Spacer(Modifier.height(8.dp))
+                WeSeeText(text, if (ok) OkColor else ErrorColor, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+            }
             Spacer(Modifier.height(16.dp))
-            PanelButton(stringResource(R.string.action_login), onClick = { onLogin(email, password) })
+            PanelButton(if (loading) "Aguarde..." else stringResource(R.string.action_login), onClick = ::submit)
             Spacer(Modifier.height(10.dp))
             AuthFooter(stringResource(R.string.no_account_prefix), stringResource(R.string.create_account), onCreateAccount)
         }

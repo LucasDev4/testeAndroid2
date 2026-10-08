@@ -14,22 +14,60 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
+import com.wesee.app.network.ApiResult
+import com.wesee.app.network.AtlasApi
+import com.wesee.app.network.RegisterBody
+import com.wesee.app.network.UserType
 import com.wesee.app.ui.components.*
 import com.wesee.app.ui.theme.WeSeeCard
 import com.wesee.app.ui.theme.WeSeeSoftText
+import kotlinx.coroutines.launch
 
-/** Tela 4 — Cadastro do responsável. */
+/** Tela 4 — Cadastro do responsável (/auth/register). Regras do backend: senha de 6 números, CPF 11, telefone 10–11 dígitos. */
 @Composable
 fun GuardianRegisterScreen(
-    onRegister: () -> Unit = {},
+    onRegistered: () -> Unit = {},
     onGoToLogin: () -> Unit = {},
 ) {
+    val scope = rememberCoroutineScope()
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirm by rememberSaveable { mutableStateOf("") }
     var cpf by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) }
+
+    fun submit() {
+        if (loading) return
+        val cpfDigits = cpf.filter { it.isDigit() }
+        val phoneDigits = phone.filter { it.isDigit() }
+        error = when {
+            name.isBlank() -> "Informe seu nome."
+            !email.contains("@") -> "Informe um e-mail válido."
+            !Regex("\\d{6}").matches(password) -> "A senha deve ter exatamente 6 números."
+            password != confirm -> "As senhas não são iguais."
+            cpfDigits.isNotEmpty() && cpfDigits.length != 11 -> "O CPF deve ter 11 números."
+            phoneDigits.isNotEmpty() && phoneDigits.length !in 10..11 -> "O telefone deve ter DDD + número (10 ou 11 dígitos)."
+            else -> null
+        }
+        if (error != null) return
+        scope.launch {
+            loading = true
+            val body = RegisterBody(name.trim(), email.trim(), password, cpfDigits.ifEmpty { null }, phoneDigits.ifEmpty { null }, UserType.RESPONSAVEL)
+            when (val r = AtlasApi.register(body)) {
+                is ApiResult.Success -> onRegistered()
+                is ApiResult.Error -> error = when (r.code) {
+                    409 -> "Esse e-mail ou CPF já está cadastrado."
+                    -1 -> "Sem conexão com o servidor."
+                    else -> r.fields.values.firstOrNull() ?: r.message
+                }
+            }
+            loading = false
+        }
+    }
+
     Column(Modifier.fillMaxSize().background(WeSeeCard).imePadding()) {
         Column(Modifier.weight(1f).fillMaxWidth().statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally) {
@@ -54,8 +92,12 @@ fun GuardianRegisterScreen(
                 WeSeeTextField(R.drawable.ic_phone, stringResource(R.string.field_phone_hint), phone, { phone = it },
                     keyboardType = KeyboardType.Phone)
             }
+            error?.let {
+                Spacer(Modifier.height(8.dp))
+                WeSeeText(it, ErrorColor, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+            }
             Spacer(Modifier.height(12.dp))
-            PanelButton(stringResource(R.string.action_register), onClick = onRegister)
+            PanelButton(if (loading) "Aguarde..." else stringResource(R.string.action_register), onClick = ::submit)
             Spacer(Modifier.height(10.dp))
             AuthFooter(stringResource(R.string.has_account_prefix), stringResource(R.string.action_login_link), onGoToLogin)
         }

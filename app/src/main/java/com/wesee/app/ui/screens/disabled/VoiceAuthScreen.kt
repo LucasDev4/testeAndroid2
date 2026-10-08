@@ -47,13 +47,13 @@ class VoiceHost(val assistant: VoiceAssistant, val session: VoiceSession)
 
 @Composable
 fun rememberVoiceHost(
-    steps: List<VoiceStep>, intro: String, finishMessage: String, onFinished: (Map<FieldKind, String>) -> Unit,
+    steps: List<VoiceStep>, intro: String, onFinished: (VoiceSession, Map<FieldKind, String>) -> Unit,
 ): VoiceHost {
     val context = LocalContext.current
     val latestOnFinished by rememberUpdatedState(onFinished)
     val host = remember {
         val assistant = VoiceAssistant(context)
-        VoiceHost(assistant, VoiceSession(assistant, steps, intro, finishMessage) { latestOnFinished(it) })
+        VoiceHost(assistant, VoiceSession(assistant, steps, intro) { session, answers -> latestOnFinished(session, answers) })
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) host.session.begin()

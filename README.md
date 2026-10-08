@@ -28,3 +28,12 @@ com.wesee.app.device  Battery (bateria real + estimativa)
 Ative no Google Cloud: **Maps SDK for Android**, **Places API (New)** e **Routes API**. Restrinja a chave ao pacote `com.wesee.app`.
 A chave NÃO fica no código: use a variável de ambiente `MAPS_API_KEY` (no GitHub: Settings → Secrets and variables → Actions → New repository secret)
 ou `MAPS_API_KEY=...` em `local.properties` (já no .gitignore).
+
+## Conexão com o backend (Backend-atlas)
+O app fala com o Spring Boot via `network/AtlasApi.kt` (`/auth/register`, `/auth/login`, `/user/me`). URL em `API_BASE_URL`:
+- Emulador: padrão `http://10.0.2.2:8080/` (nada a configurar).
+- Celular real: coloque `API_BASE_URL=http://IP-DO-SEU-PC:8080/` em `local.properties` (celular e PC na mesma rede Wi-Fi; libere a porta 8080 no firewall).
+- GitHub Actions: crie o secret `API_BASE_URL` (e `MAPS_API_KEY`).
+HTTP puro só é permitido no build **debug** (`src/debug`). Em produção use HTTPS.
+Regras do backend refletidas no app: senha com **exatamente 6 números** (na voz: "um dois três quatro cinco seis"), CPF 11 dígitos, telefone 10–11 dígitos.
+Sessão: o token JWT fica salvo no aparelho; ao abrir o app ele é validado em `/user/me` (401/403 → volta ao login). Logout apaga tudo.

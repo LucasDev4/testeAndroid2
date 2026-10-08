@@ -9,22 +9,36 @@ enum class VoiceState { Idle, Speaking, Listening, Processing }
 enum class FieldKind { Name, Email, Password, ConfirmPassword }
 data class VoiceStep(val key: FieldKind, val question: String, val secret: Boolean = false)
 
+private val digitWords = mapOf(
+    "zero" to '0', "um" to '1', "uma" to '1', "dois" to '2', "duas" to '2', "três" to '3', "tres" to '3',
+    "quatro" to '4', "cinco" to '5', "seis" to '6', "meia" to '6', "sete" to '7', "oito" to '8', "nove" to '9',
+)
+
+/** "um dois três 4 5 seis" → "123456" (o backend exige senha com exatamente 6 números). */
+fun spokenToDigits(text: String): String = buildString {
+    text.lowercase().split(Regex("[^\\p{L}\\p{N}]+")).forEach { tok ->
+        if (tok.isNotEmpty() && tok.all { it.isDigit() }) append(tok) else digitWords[tok]?.let { append(it) }
+    }
+}
+
 /**
  * Conversa guiada: IA pergunta (voz) → usuário toca no microfone e responde → reconhecimento →
  * confirmação (nome/e-mail: "sim/não"; senha: não é repetida em voz alta) → próxima pergunta.
+ * Ao responder tudo, [onFinished] é chamado (envie ao backend) e a tela deve terminar com
+ * [complete], [retryFrom] ou [failSubmit].
  */
 class VoiceSession(
     private val assistant: VoiceAssistant,
     private val steps: List<VoiceStep>,
     private val intro: String,
-    private val finishMessage: String,
-    private val onFinished: (Map<FieldKind, String>) -> Unit,
+    private val onFinished: (VoiceSession, Map<FieldKind, String>) -> Unit,
 ) {
     var state by mutableStateOf(VoiceState.Idle)
         private set
     private var index = 0
     private var started = false
     private var done = false
+    private var awaitingRetry = false
     private var pending: String? = null
     private val answers = mutableMapOf<FieldKind, String>()
 
@@ -38,11 +52,37 @@ class VoiceSession(
 
     fun onMicTap() {
         if (done) return
+        if (awaitingRetry) { // erro de rede: reenviar as mesmas respostas
+            assistant.stopSpeaking(); awaitingRetry = false; state = VoiceState.Processing
+            onFinished(this, answers.toMap()); return
+        }
         when (state) {
             VoiceState.Speaking -> { assistant.stopSpeaking(); listen() }
             VoiceState.Idle -> listen()
             else -> Unit
         }
+    }
+
+    /** Resposta final com sucesso (ex.: "Cadastro concluído"). */
+    fun complete(message: String, then: () -> Unit = {}) {
+        done = true
+        assistant.beep(Beep.Success)
+        say(message, then)
+    }
+
+    /** O backend recusou algo: explica e volta a perguntar a partir do campo [key]. */
+    fun retryFrom(key: FieldKind, message: String) {
+        done = false; awaitingRetry = false; pending = null
+        index = steps.indexOfFirst { it.key == key }.coerceAtLeast(0)
+        assistant.beep(Beep.Error)
+        say("$message ${steps[index].question}")
+    }
+
+    /** Falha de rede/servidor: explica; o próximo toque no microfone reenvia as respostas. */
+    fun failSubmit(message: String) {
+        awaitingRetry = true
+        assistant.beep(Beep.Error)
+        say(message)
     }
 
     private fun say(text: String, then: () -> Unit = {}) {
@@ -73,6 +113,10 @@ class VoiceSession(
                     index = steps.indexOfFirst { it.key == FieldKind.Password }
                     say("As senhas não são iguais. ${steps[index].question}")
                 }
+            step.key == FieldKind.Password && value.length != 6 -> {
+                assistant.beep(Beep.Error)
+                say("A senha precisa ter exatamente 6 números. ${step.question}")
+            }
             step.secret -> {
                 answers[step.key] = value
                 assistant.beep(Beep.Success)
@@ -107,9 +151,9 @@ class VoiceSession(
     }
 
     private fun finish() {
-        done = true
+        state = VoiceState.Processing
         assistant.beep(Beep.Success)
-        say(finishMessage) { onFinished(answers.toMap()) }
+        onFinished(this, answers.toMap())
     }
 
     private fun fail(code: Int, message: String? = null) {
@@ -133,7 +177,7 @@ class VoiceSession(
             .replace(Regex("\\s*arroba\\s*"), "@").replace(Regex("\\s+ponto\\s+"), ".")
             .replace(Regex("\\s+(sublinhado|underline)\\s+"), "_").replace(Regex("\\s+traço\\s+"), "-")
             .replace(" ", "")
-        FieldKind.Password, FieldKind.ConfirmPassword -> text.trim()
+        FieldKind.Password, FieldKind.ConfirmPassword -> spokenToDigits(text)
     }
 
     private fun spoken(value: String) = value.replace("@", " arroba ").replace(".", " ponto ")
