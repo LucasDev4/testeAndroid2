@@ -34,12 +34,16 @@ class UserStore(context: Context) {
         get() = prefs.getString("avatar", null)?.takeIf { File(it).exists() }
         private set(value) { prefs.edit().putString("avatar", value).apply() }
 
-    /** Copia a imagem escolhida para o armazenamento do app e a define como avatar. Chamar fora da thread principal. */
-    fun saveAvatar(context: Context, uri: Uri): String? = try {
+    fun saveAvatar(context: Context, uri: Uri): String? {
+    return try {
         val file = File(context.filesDir, "avatar_${System.currentTimeMillis()}.jpg")
-        context.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: return null
+        val input = context.contentResolver.openInputStream(uri) ?: return null
+        input.use { it.copyTo(file.outputStream()) }
         avatarPath?.let { File(it).delete() }
         avatarPath = file.absolutePath
         file.absolutePath
-    } catch (e: Exception) { null }
+    } catch (e: Exception) {
+        null
+    }
+}
 }
