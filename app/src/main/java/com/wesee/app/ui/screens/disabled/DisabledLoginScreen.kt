@@ -6,6 +6,7 @@ import com.wesee.app.network.ApiResult
 import com.wesee.app.network.AtlasApi
 import com.wesee.app.network.AuthSession
 import com.wesee.app.network.UserType
+import com.wesee.app.network.spokenFailure
 import com.wesee.app.voice.FieldKind
 import com.wesee.app.voice.VoiceStep
 import kotlinx.coroutines.launch
@@ -34,7 +35,7 @@ fun DisabledLoginScreen(
                 is ApiResult.Error -> when {
                     r.code == 401 || r.code == 404 -> session.retryFrom(FieldKind.Email, "E-mail ou senha incorretos.")
                     r.code == 400 -> session.retryFrom(FieldKind.Email, r.fields.values.firstOrNull() ?: "Dados inválidos.")
-                    else -> session.failSubmit("Não consegui falar com o servidor. Toque no botão para tentar de novo.")
+                    else -> session.failSubmit(r.spokenFailure())
                 }
             }
         }

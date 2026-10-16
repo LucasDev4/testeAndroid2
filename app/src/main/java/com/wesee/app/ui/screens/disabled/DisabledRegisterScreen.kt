@@ -7,6 +7,7 @@ import com.wesee.app.network.AtlasApi
 import com.wesee.app.network.AuthSession
 import com.wesee.app.network.RegisterBody
 import com.wesee.app.network.UserType
+import com.wesee.app.network.spokenFailure
 import com.wesee.app.voice.FieldKind
 import com.wesee.app.voice.VoiceStep
 import kotlinx.coroutines.launch
@@ -51,7 +52,7 @@ fun DisabledRegisterScreen(
                         }
                         session.retryFrom(key, r.fields.values.firstOrNull() ?: "Dados inválidos.")
                     }
-                    else -> session.failSubmit("Não consegui falar com o servidor. Toque no botão para tentar de novo.")
+                    else -> session.failSubmit(r.spokenFailure())
                 }
             }
         }

@@ -51,7 +51,7 @@ object AtlasApi {
                 }
             }
         } catch (e: IOException) {
-            ApiResult.Error(-1, "Sem conexão com o servidor.")
+            ApiResult.Error(-1, "Sem conexão com o servidor (${BuildConfig.API_BASE_URL}).")
         } catch (e: IllegalArgumentException) {
             ApiResult.Error(-1, "Endereço do servidor inválido (API_BASE_URL).")
         }
@@ -89,3 +89,7 @@ object AtlasApi {
         is ApiResult.Error -> r
     }
 }
+
+/** Frase falada quando o servidor não respondeu. No build debug inclui o endereço usado, para facilitar o diagnóstico. */
+fun ApiResult.Error.spokenFailure(): String =
+    (if (BuildConfig.DEBUG) message else "Não consegui falar com o servidor.") + " Toque no botão para tentar de novo."

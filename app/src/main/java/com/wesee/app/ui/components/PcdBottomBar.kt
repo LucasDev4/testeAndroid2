@@ -30,7 +30,7 @@ val LocalPcdNav = staticCompositionLocalOf { PcdNav() }
 private val Inactive = Color(0xFF7FB4F9)
 
 @Composable
-private fun NavItem(label: String, icon: Int, selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier) {
+internal fun NavItem(label: String, icon: Int, selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier) {
     Column(
         modifier.fillMaxHeight().then(if (onClick != null) Modifier.clickable(role = Role.Tab, onClick = onClick) else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,

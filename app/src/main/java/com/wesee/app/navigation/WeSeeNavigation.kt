@@ -8,6 +8,9 @@ import com.wesee.app.data.UserStore
 import com.wesee.app.ui.screens.disabled.DisabledLoginScreen
 import com.wesee.app.ui.screens.disabled.DisabledRegisterScreen
 import com.wesee.app.ui.screens.guardian.GuardianLoginScreen
+import com.wesee.app.ui.screens.guardian.home.GuardianHomeScreen
+import com.wesee.app.ui.screens.guardian.profile.GuardianProfileScreen
+import com.wesee.app.ui.screens.guardian.home.GuardianMapsScreen
 import com.wesee.app.ui.screens.guardian.GuardianRegisterScreen
 import com.wesee.app.ui.screens.pcd.chat.PcdChatScreen
 import com.wesee.app.ui.screens.pcd.home.PcdHomeScreen
@@ -23,7 +26,8 @@ import com.wesee.app.network.UserType
 
 /** PcdHome / PcdChat só são alcançadas pelo fluxo do "PCD visual" (login por voz ou biometria). */
 enum class Route {
-    Welcome, WhoAreYou, GuardianLogin, GuardianRegister, DisabledLogin, DisabledRegister, PcdHome, PcdChat, PcdMaps, PcdProfile
+    Welcome, WhoAreYou, GuardianLogin, GuardianRegister, DisabledLogin, DisabledRegister, PcdHome, PcdChat, PcdMaps, PcdProfile,
+    GuardianHome, GuardianMaps, GuardianProfile
 }
 
 /** Destino ao pressionar "voltar" (null = sai do app). */
@@ -35,6 +39,8 @@ private fun Route.back(): Route? = when (this) {
     Route.DisabledLogin, Route.DisabledRegister -> Route.WhoAreYou
     Route.PcdHome -> null
     Route.PcdChat, Route.PcdMaps, Route.PcdProfile -> Route.PcdHome
+    Route.GuardianHome -> null
+    Route.GuardianMaps, Route.GuardianProfile -> Route.GuardianHome
 }
 
 @Composable
@@ -52,7 +58,11 @@ fun WeSeeApp() {
             is ApiResult.Success -> userStore.updateName(r.value.nome)
             is ApiResult.Error -> if (r.code == 401 || r.code == 403) {
                 userStore.logout()
-                if (route == Route.PcdHome || route == Route.PcdChat || route == Route.PcdMaps || route == Route.PcdProfile) route = Route.DisabledLogin
+                when (route) {
+                    Route.PcdHome, Route.PcdChat, Route.PcdMaps, Route.PcdProfile -> route = Route.DisabledLogin
+                    Route.GuardianHome, Route.GuardianMaps, Route.GuardianProfile -> route = Route.GuardianLogin
+                    else -> Unit
+                }
             }
         }
     }
@@ -70,7 +80,7 @@ fun WeSeeApp() {
             onSelectGuardian = { route = Route.GuardianLogin },
         )
         Route.GuardianLogin -> GuardianLoginScreen(
-            onLoggedIn = { userStore.saveSession(it) },
+            onLoggedIn = { userStore.saveSession(it); route = Route.GuardianHome },
             onCreateAccount = { route = Route.GuardianRegister },
         )
         Route.GuardianRegister -> GuardianRegisterScreen(
@@ -91,6 +101,23 @@ fun WeSeeApp() {
         )
         Route.PcdHome -> PcdHomeScreen(firstName = userStore.firstName, onOpenChat = { route = Route.PcdChat })
         Route.PcdChat -> PcdChatScreen(onOpenHome = { route = Route.PcdHome })
+        Route.GuardianHome -> GuardianHomeScreen(
+            responsavelName = userStore.name,
+            onOpenMaps = { route = Route.GuardianMaps },
+            onAccount = { route = Route.GuardianProfile },
+        )
+        Route.GuardianMaps -> GuardianMapsScreen(
+            responsavelName = userStore.name,
+            onOpenHome = { route = Route.GuardianHome },
+            onAccount = { route = Route.GuardianProfile },
+        )
+        Route.GuardianProfile -> GuardianProfileScreen(
+            userStore = userStore,
+            onBack = { route = Route.GuardianHome },
+            onHome = { route = Route.GuardianHome },
+            onMaps = { route = Route.GuardianMaps },
+            onLogout = { userStore.logout(); route = Route.GuardianLogin },
+        )
         Route.PcdMaps -> PcdMapsScreen()
         Route.PcdProfile -> PcdProfileScreen(
             userStore = userStore,

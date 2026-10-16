@@ -48,7 +48,6 @@ fun GuardianLoginScreen(
             when (val r = AtlasApi.login(email.trim(), password)) {
                 is ApiResult.Success ->
                     if (r.value.tipo == UserType.RESPONSAVEL) {
-                        message = "Login realizado! A área do responsável chega em breve." to true
                         onLoggedIn(r.value)
                     } else message = "Essa conta é de usuário PCD. Entre pelo modo PCD visual." to false
                 is ApiResult.Error -> {

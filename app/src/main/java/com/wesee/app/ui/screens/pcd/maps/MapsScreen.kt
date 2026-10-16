@@ -199,8 +199,7 @@ fun PcdMapsScreen() {
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1622))) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = camera,
+                Modifier.fillMaxSize(), cameraPositionState = camera,
                 properties = MapProperties(isMyLocationEnabled = hasPermission, mapStyleOptions = mapStyle),
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false),
                 contentPadding = PaddingValues(bottom = 230.dp),
