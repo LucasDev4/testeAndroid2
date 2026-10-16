@@ -37,7 +37,7 @@ import kotlinx.coroutines.delay
 /** Mapa ilustrativo (fallback visual) usado enquanto não há chave do Google Maps. NÃO é um mapa real. */
 @Composable
 private fun IllustrativeMap(modifier: Modifier = Modifier) {
-    Canvas(modifier) {
+    Canvas(modifier = modifier) {
         val w = size.width; val h = size.height
         drawRect(Color(0xFFE9EAEC))
         val park = Color(0xFFA8EDA0)
@@ -61,13 +61,6 @@ private fun IllustrativeMap(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Mapa reutilizável do Responsável.
- * - Com MAPS_API_KEY configurada: Google Maps SDK real, câmera centrada em [latitude]/[longitude], marcador na posição
- *   (atualiza quando as coordenadas mudam), estado de carregamento e fallback se o mapa não carregar.
- * - Sem chave: mapa ILUSTRATIVO, com aviso. Onde configurar a chave: README → "Mapa (Google Maps Platform)".
- * Os dados (coordenadas) ficam fora daqui: este componente só apresenta.
- */
 @Composable
 fun GuardianMap(
     latitude: Double, longitude: Double, modifier: Modifier = Modifier,
@@ -81,12 +74,13 @@ fun GuardianMap(
     LaunchedEffect(useReal) {
         if (useReal) { delay(12000); if (!loaded) failed = true }
     }
-    Box(modifier.shadow(10.dp, shape).clip(shape)) {
+    Box(modifier = modifier.shadow(10.dp, shape).clip(shape)) {
         if (useReal) {
             val camera = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(target, 15f) }
             LaunchedEffect(target) { camera.animate(CameraUpdateFactory.newLatLngZoom(target, 15f)) }
             GoogleMap(
-                Modifier.fillMaxSize(), cameraPositionState = camera,
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = camera,
                 uiSettings = MapUiSettings(
                     zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false,
                     scrollGesturesEnabled = interactive, zoomGesturesEnabled = interactive,
@@ -95,15 +89,16 @@ fun GuardianMap(
                 onMapLoaded = { loaded = true },
             ) {
                 Marker(
-                    state = remember(target) { MarkerState(target) }, title = markerTitle,
+                    state = remember(target) { MarkerState(target) },
+                    title = markerTitle,
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
                 )
             }
-            if (!loaded) Box(Modifier.fillMaxSize().background(Color(0xFFE9EAEC)), contentAlignment = Alignment.Center) {
+            if (!loaded) Box(modifier = Modifier.fillMaxSize().background(Color(0xFFE9EAEC)), contentAlignment = Alignment.Center) {
                 WeSeeText("Carregando mapa...", WeSeeBlue, 11, FontWeight.SemiBold)
             }
         } else {
-            IllustrativeMap(Modifier.fillMaxSize())
+            IllustrativeMap(modifier = Modifier.fillMaxSize())
         }
         // aviso: os dados são demonstrativos / o mapa pode ser ilustrativo
         val note = when {
@@ -111,10 +106,17 @@ fun GuardianMap(
             !MapsApi.isConfigured -> "Mapa ilustrativo · localização demonstrativa"
             else -> "Localização demonstrativa"
         }
-        Box(Modifier.align(Alignment.BottomStart).padding(8.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.85f))
-            .padding(horizontal = 8.dp, vertical = 3.dp)) { WeSeeText(note, WeSeeBlue, 7, FontWeight.SemiBold) }
+        Box(modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(8.dp)
+            .clip(RoundedCornerShape(50))
+            .background(Color.White.copy(alpha = 0.85f))
+            .padding(horizontal = 8.dp, vertical = 3.dp))
+        {
+            WeSeeText(note, WeSeeBlue, 7, FontWeight.SemiBold)
+        }
         if (onClick != null) {
-            Box(Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = "Abrir localização", onClick = onClick))
+            Box(modifier = Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = "Abrir localização", onClick = onClick))
         }
     }
 }
@@ -122,5 +124,11 @@ fun GuardianMap(
 /** Miniatura do mapa da Home (toque abre a tela de Localização). */
 @Composable
 fun MapThumbnail(latitude: Double, longitude: Double, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    GuardianMap(latitude, longitude, modifier.padding(horizontal = 18.dp).fillMaxWidth().height(110.dp), interactive = false, onClick = onClick)
+    GuardianMap(
+        latitude = latitude,
+        longitude = longitude,
+        modifier = modifier.padding(horizontal = 18.dp).fillMaxWidth().height(110.dp),
+        interactive = false,
+        onClick = onClick
+    )
 }
