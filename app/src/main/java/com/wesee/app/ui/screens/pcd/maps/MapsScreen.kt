@@ -77,7 +77,7 @@ private fun PillButton(label: String, icon: Int, iconWidth: Int) {
     ) {
         Image(painterResource(icon), null, Modifier.width(iconWidth.dp))
         Spacer(Modifier.width(8.dp))
-        WeSeeText(label, ButtonText, 12, FontWeight.SemiBold)
+        WeSeeText(text = label, color = ButtonText, size = 12, weight = FontWeight.SemiBold)
     }
 }
 
@@ -95,7 +95,7 @@ private fun SearchCard(
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Box(Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.CenterStart) {
-                WeSeeText("Sua localização", WeSeeMid, 12, FontWeight.SemiBold, textAlign = TextAlign.Start)
+                WeSeeText(text = "Sua localização", color = WeSeeMid, size = 12, weight = FontWeight.SemiBold, textAlign = TextAlign.Start)
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(WeSeeMid.copy(alpha = 0.5f)))
             Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -113,7 +113,7 @@ private fun SearchCard(
                 )
                 if (query.isNotEmpty()) {
                     Box(Modifier.size(34.dp).clickable(role = Role.Button, onClick = onClear), contentAlignment = Alignment.Center) {
-                        WeSeeText("✕", WeSeeMid, 14, FontWeight.Bold)
+                        WeSeeText(text = "✕", color = WeSeeMid, size = 14, weight = FontWeight.Bold)
                     }
                 }
             }
@@ -126,8 +126,8 @@ private fun SuggestionList(items: List<Suggestion>, onPick: (Suggestion) -> Unit
     Column(Modifier.fillMaxWidth().softCard(18.dp)) {
         items.take(5).forEach { s ->
             Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { onPick(s) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                WeSeeText(s.primary, WeSeeBlue, 13, FontWeight.Bold, textAlign = TextAlign.Start)
-                if (s.secondary.isNotBlank()) WeSeeText(s.secondary, WeSeeMid, 10, textAlign = TextAlign.Start)
+                WeSeeText(text = s.primary, color = WeSeeBlue, size = 13, weight = FontWeight.Bold, textAlign = TextAlign.Start)
+                if (s.secondary.isNotBlank()) WeSeeText(text = s.secondary, color = WeSeeMid, size = 10, textAlign = TextAlign.Start)
             }
         }
     }
@@ -199,7 +199,8 @@ fun PcdMapsScreen() {
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1622))) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             GoogleMap(
-                Modifier.fillMaxSize(), cameraPositionState = camera,
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = camera,
                 properties = MapProperties(isMyLocationEnabled = hasPermission, mapStyleOptions = mapStyle),
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false),
                 contentPadding = PaddingValues(bottom = 230.dp),
@@ -223,17 +224,23 @@ fun PcdMapsScreen() {
                 }
                 if (!hasPermission) {
                     Row(Modifier.fillMaxWidth().softCard(18.dp).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        WeSeeText("Ative a localização para ver sua posição no mapa.", WeSeeBlue, 11, FontWeight.SemiBold,
-                            Modifier.weight(1f), textAlign = TextAlign.Start)
+                        WeSeeText(
+                            text = "Ative a localização para ver sua posição no mapa.",
+                            color = WeSeeBlue,
+                            size = 11,
+                            weight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Start
+                        )
                         Spacer(Modifier.width(8.dp))
                         Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeBlue).clickable(role = Role.Button) {
                             permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
-                        }.padding(horizontal = 14.dp, vertical = 8.dp)) { WeSeeText("Permitir", ButtonText, 11, FontWeight.SemiBold) }
+                        }.padding(horizontal = 14.dp, vertical = 8.dp)) { WeSeeText(text = "Permitir", color = ButtonText, size = 11, weight = FontWeight.SemiBold) }
                     }
                 }
                 if (!MapsApi.isConfigured) {
                     Box(Modifier.fillMaxWidth().softCard(18.dp).padding(12.dp)) {
-                        WeSeeText("Chave do Google Maps não configurada (MAPS_API_KEY).", WeSeeBlue, 11, FontWeight.SemiBold, textAlign = TextAlign.Start)
+                        WeSeeText(text = "Chave do Google Maps não configurada (MAPS_API_KEY).", color = WeSeeBlue, size = 11, weight = FontWeight.SemiBold, textAlign = TextAlign.Start)
                     }
                 }
             }
@@ -245,20 +252,29 @@ fun PcdMapsScreen() {
                     .padding(start = 20.dp, end = 20.dp, top = 64.dp, bottom = 14.dp),
             ) {
                 Row(verticalAlignment = Alignment.Top) {
-                    WeSeeText(destination?.name ?: "Selecione um destino", WeSeeBlue, 24, FontWeight.Bold, Modifier.weight(1f),
-                        lineHeight = 28, textAlign = TextAlign.Start)
+                    WeSeeText(
+                        text = destination?.name ?: "Selecione um destino",
+                        color = WeSeeBlue,
+                        size = 24,
+                        weight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                        lineHeight = 28,
+                        textAlign = TextAlign.Start
+                    )
                     val r = route
                     if (r != null) {
                         Spacer(Modifier.width(10.dp))
                         Column(horizontalAlignment = Alignment.End) {
-                            WeSeeText(formatDistance(r.distanceMeters), WeSeeBlue, 22, FontWeight.Bold)
-                            WeSeeText(formatDuration(r.durationSeconds), WeSeeMid, 12, FontWeight.SemiBold)
+                            WeSeeText(text = formatDistance(r.distanceMeters), color = WeSeeBlue, size = 22, weight = FontWeight.Bold)
+                            WeSeeText(text = formatDuration(r.durationSeconds), color = WeSeeMid, size = 12, weight = FontWeight.SemiBold)
                         }
                     } else if (routing) {
-                        WeSeeText("Calculando...", WeSeeMid, 12, FontWeight.SemiBold)
+                        WeSeeText(text = "Calculando...", color = WeSeeMid, size = 12, weight = FontWeight.SemiBold)
                     }
                 }
-                error?.let { WeSeeText(it, WeSeeMid, 10, textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp)) }
+                error?.let {
+                    WeSeeText(text = it, color = WeSeeMid, size = 10, textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
+                }
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PillButton("Direção", R.drawable.ic_direction, 15)
