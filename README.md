@@ -37,3 +37,15 @@ O app fala com o Spring Boot via `network/AtlasApi.kt` (`/auth/register`, `/auth
 HTTP puro só é permitido no build **debug** (`src/debug`). Em produção use HTTPS.
 Regras do backend refletidas no app: senha com **exatamente 6 números** (na voz: "um dois três quatro cinco seis"), CPF 11 dígitos, telefone 10–11 dígitos.
 Sessão: o token JWT fica salvo no aparelho; ao abrir o app ele é validado em `/user/me` (401/403 → volta ao login). Logout apaga tudo.
+
+## Área do Responsável (dados demonstrativos)
+Telas: Home, painel de Notificações (sino) e Localização — `ui/screens/guardian/home` + `ui/screens/guardian/components`.
+Dados fictícios em `data/GuardianDemoData.kt` (trocar por API depois). O mapa (`GuardianMap.kt`) usa o Google Maps SDK quando
+`MAPS_API_KEY` está configurada (variável de ambiente / GitHub Secret / `local.properties`) e, sem chave, mostra um mapa **ilustrativo**.
+Fluxo: Login do responsável → GuardianHome ⇄ GuardianMaps. A aba Account ainda não tem tela.
+
+## Perfil do Responsável e nomes dinâmicos
+`ui/screens/profile/ProfileContent.kt` é o Perfil compartilhado (PCD e Responsável). O nome do responsável vem do login (`UserStore.name`);
+`data/PersonNames.kt` deriva o nome da pessoa acompanhada ("Gabriel Rodrigues" → "Gabriel Rodrigues Jr.", sem duplicar "Jr.").
+## Ícones
+Ícones convertidos para VectorDrawable a partir dos SVGs em `design/icons/` (lock, mail, call_end, nomeIcon, Exterior → casa, OlhosIconAzul → olhos).
