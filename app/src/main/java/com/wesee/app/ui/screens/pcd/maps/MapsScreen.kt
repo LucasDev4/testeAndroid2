@@ -199,15 +199,26 @@ fun PcdMapsScreen() {
     Column(Modifier.fillMaxSize().background(Color(0xFF0B1622))) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             GoogleMap(
-                Modifier.fillMaxSize(), cameraPositionState = camera,
-                properties = MapProperties(isMyLocationEnabled = hasPermission, mapStyleOptions = mapStyle),
-                uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false),
-                contentPadding = PaddingValues(bottom = 230.dp),
-                onMapLoaded = { mapLoaded = true },
-            ) {
-                destination?.let { d -> Marker(state = remember(d) { MarkerState(d.latLng) }, title = d.name) }
-                route?.let { Polyline(points = it.points, color = RouteColor, width = 14f) }
-            }
+    modifier = Modifier.fillMaxSize(),
+    cameraPositionState = camera,
+    properties = MapProperties(
+        isMyLocationEnabled = hasPermission,
+        mapStyleOptions = mapStyle
+    ),
+    uiSettings = MapUiSettings(
+        zoomControlsEnabled = false,
+        myLocationButtonEnabled = false,
+        compassEnabled = false,
+        mapToolbarEnabled = false
+    ),
+    contentPadding = PaddingValues(bottom = 230.dp),
+    onMapLoaded = { mapLoaded = true },
+) {
+    destination?.let { d ->
+        Marker(state = remember(d) { MarkerState(d.latLng) }, title = d.name)
+    }
+    route?.let { Polyline(points = it.points, color = RouteColor, width = 14f) }
+}
 
             Column(Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SearchCard(query, { query = it }, onClear = { query = ""; destination = null; route = null; suggestions = emptyList(); error = null })
