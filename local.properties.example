@@ -1,0 +1,10 @@
+## Copie para "local.properties" (esse arquivo NÃO é versionado) e ajuste. O Android Studio já cria o sdk.dir sozinho.
+
+# Endereço do backend (Spring Boot). Termine com "/".
+#  - Emulador do Android Studio .......... http://10.0.2.2:8080/        (é o padrão; pode deixar sem essa linha)
+#  - Celular por cabo USB (adb reverse) .. http://localhost:8080/        (rode antes: adb reverse tcp:8080 tcp:8080)
+#  - Celular no mesmo Wi-Fi do PC ........ http://IP-DO-SEU-PC:8080/    (ex.: http://192.168.0.10:8080/)
+API_BASE_URL=http://10.0.2.2:8080/
+
+# Chave do Google Maps (Maps SDK for Android, Places API (New) e Routes API ativadas) — opcional
+# MAPS_API_KEY=
