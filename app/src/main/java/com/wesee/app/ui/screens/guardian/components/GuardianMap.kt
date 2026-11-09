@@ -86,19 +86,26 @@ fun GuardianMap(
             val camera = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(target, 15f) }
             LaunchedEffect(target) { camera.animate(CameraUpdateFactory.newLatLngZoom(target, 15f)) }
             GoogleMap(
-                Modifier.fillMaxSize(), cameraPositionState = camera,
-                uiSettings = MapUiSettings(
-                    zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false,
-                    scrollGesturesEnabled = interactive, zoomGesturesEnabled = interactive,
-                    rotationGesturesEnabled = interactive, tiltGesturesEnabled = interactive,
-                ),
-                onMapLoaded = { loaded = true },
-            ) {
-                Marker(
-                    state = remember(target) { MarkerState(target) }, title = markerTitle,
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
-                )
-            }
+    modifier = Modifier.fillMaxSize(),
+    cameraPositionState = camera,
+    uiSettings = MapUiSettings(
+        zoomControlsEnabled = false,
+        myLocationButtonEnabled = false,
+        compassEnabled = false,
+        mapToolbarEnabled = false,
+        scrollGesturesEnabled = interactive,
+        zoomGesturesEnabled = interactive,
+        rotationGesturesEnabled = interactive,
+        tiltGesturesEnabled = interactive,
+    ),
+    onMapLoaded = { loaded = true },
+) {
+    Marker(
+        state = remember(target) { MarkerState(target) },
+        title = markerTitle,
+        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+    )
+}
             if (!loaded) Box(Modifier.fillMaxSize().background(Color(0xFFE9EAEC)), contentAlignment = Alignment.Center) {
                 WeSeeText("Carregando mapa...", WeSeeBlue, 11, FontWeight.SemiBold)
             }
