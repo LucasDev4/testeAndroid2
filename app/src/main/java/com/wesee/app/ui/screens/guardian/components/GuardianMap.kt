@@ -86,7 +86,8 @@ fun GuardianMap(
             val camera = rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(target, 15f) }
             LaunchedEffect(target) { camera.animate(CameraUpdateFactory.newLatLngZoom(target, 15f)) }
             GoogleMap(
-                Modifier.fillMaxSize(), cameraPositionState = camera,
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = camera,
                 uiSettings = MapUiSettings(
                     zoomControlsEnabled = false, myLocationButtonEnabled = false, compassEnabled = false, mapToolbarEnabled = false,
                     scrollGesturesEnabled = interactive, zoomGesturesEnabled = interactive,
