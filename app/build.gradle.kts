@@ -14,7 +14,7 @@ val mapsKey: String = System.getenv("MAPS_API_KEY")?.takeIf { it.isNotBlank() } 
 // URL do backend. Padrão: o backend publicado no Render. Para testar um backend local, defina API_BASE_URL
 // (variável de ambiente/GitHub Secret ou local.properties): emulador http://10.0.2.2:8080/ | celular http://IP-DO-PC:8080/
 val apiBaseUrl: String = System.getenv("API_BASE_URL")?.takeIf { it.isNotBlank() }
-    ?: localProps.getProperty("API_BASE_URL") ?: "https://backend-wesee-final.onrender.com/"
+    ?: localProps.getProperty("API_BASE_URL") ?: "https://backend-wesee-final.onrender.com"
 
 android {
     namespace = "com.wesee.app"
