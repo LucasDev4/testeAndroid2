@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.saveable.listSaver
 import com.wesee.app.data.UserStore
 import com.wesee.app.network.ApiResult
 import com.wesee.app.network.AtlasApi
