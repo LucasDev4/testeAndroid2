@@ -34,10 +34,13 @@ enum class Route {
 enum class AuthIntent { Login, Register }
 
 /** Pilha de telas: a tela atual é a última; "voltar" desempilha. Sobrevive a rotação/recriação do app. */
-private val RouteStackSaver = listSaver<SnapshotStateList<Route>, String>(
-    save = { stack -> stack.map { it.name } },
-    restore = { saved -> saved.map { Route.valueOf(it) }.toMutableStateList() },
-)
+private val RouteStackSaver =
+    listSaver<SnapshotStateList<Route>, String>(
+        save = { stack: SnapshotStateList<Route> -> stack.map { it.name } },
+        restore = { saved: List<String> ->
+            saved.map { Route.valueOf(it) }.toMutableStateList()
+        },
+    )
 
 @Composable
 fun WeSeeApp() {
