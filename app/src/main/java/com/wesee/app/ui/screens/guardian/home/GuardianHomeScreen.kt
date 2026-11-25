@@ -12,10 +12,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wesee.app.data.GuardianDemoData
 import com.wesee.app.data.firstNameOf
+import com.wesee.app.ui.components.overlapTop
 import com.wesee.app.ui.screens.guardian.components.*
 import com.wesee.app.ui.theme.WeSeeCard
 
-/** Home do Responsável (dados demonstrativos). O sino abre o painel de notificações. */
+/**
+ * Home do Responsável (dados demonstrativos). Estrutura:
+ *  1) topo em destaque (saudação, quem é acompanhado, sino, dispositivo e bateria);
+ *  2) localização (endereço, horário e mapa; toque abre a aba Maps);
+ *  3) alertas recentes (carrossel);
+ *  4) status do dispositivo (4 cartões).
+ * O sino abre o painel de notificações (voltar do Android fecha).
+ */
 @Composable
 fun GuardianHomeScreen(responsavelName: String, onOpenMaps: () -> Unit = {}, onAccount: (() -> Unit)? = null) {
     val data = remember(responsavelName) { GuardianDemoData.build(responsavelName) }
@@ -24,19 +32,25 @@ fun GuardianHomeScreen(responsavelName: String, onOpenMaps: () -> Unit = {}, onA
 
     Box(Modifier.fillMaxSize().background(WeSeeCard)) {
         Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).statusBarsPadding().padding(top = 14.dp, bottom = 16.dp)) {
-                GuardianHeader(greetingName = firstNameOf(responsavelName), pessoaNome = data.pessoa.nome, hasUnread = data.notificacoes.any { !it.lida }, onBellClick = { panelOpen = !panelOpen })
-                Spacer(Modifier.height(6.dp))
-                DeviceConnectedIndicator()
-                Spacer(Modifier.height(8.dp))
-                LocationSummaryCard(data.pessoa)
-                Spacer(Modifier.height(18.dp))
-                AlertsTitle()
-                AlertsCarousel(data.alertas)
-                Spacer(Modifier.height(16.dp))
-                StatusCard(data.dispositivo, data.pessoa)
-                Spacer(Modifier.height(16.dp))
-                MapThumbnail(data.pessoa.latitude, data.pessoa.longitude, onClick = onOpenMaps)
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                HomeHero(
+                    greetingName = firstNameOf(responsavelName),
+                    pessoaNome = data.pessoa.nome,
+                    hasUnread = data.notificacoes.any { !it.lida },
+                    deviceConnected = data.dispositivo.status == "Conectado",
+                    batteryPercent = data.dispositivo.bateria,
+                    onBellClick = { panelOpen = !panelOpen },
+                )
+                // o conteúdo "sobe" 44dp sobre o topo azul (efeito de cartão flutuante)
+                Column(Modifier.overlapTop(44.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
+                    LocationHomeCard(data.pessoa, onOpenMaps)
+                    Column {
+                        AlertsTitle()
+                        AlertsCarousel(data.alertas)
+                    }
+                    StatusSection(data.dispositivo, data.pessoa.nome)
+                    Spacer(Modifier.height(4.dp))
+                }
             }
             GuardianBottomBar(GuardianTab.Home, onHome = {}, onMaps = onOpenMaps, onAccount = onAccount)
         }
