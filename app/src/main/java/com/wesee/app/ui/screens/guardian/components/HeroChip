@@ -1,0 +1,213 @@
+package com.wesee.app.ui.screens.guardian.home
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.wesee.app.R
+import com.wesee.app.data.Dispositivo
+import com.wesee.app.data.PessoaAcompanhada
+import com.wesee.app.ui.components.WeSeeText
+import com.wesee.app.ui.screens.guardian.components.AlertRed
+import com.wesee.app.ui.screens.guardian.components.GuardianMap
+import com.wesee.app.ui.screens.guardian.components.StatusGreen
+import com.wesee.app.ui.theme.WeSeeBlue
+import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeDeep
+import com.wesee.app.ui.theme.WeSeeMid
+
+/* ------------------------------------------------------------------------------------------------
+ * Componentes EXCLUSIVOS da nova Home do Responsável. Nenhum componente existente foi alterado:
+ * GuardianHeader e DeviceConnectedIndicator continuam sendo usados pela tela de Localização (Maps).
+ * ------------------------------------------------------------------------------------------------ */
+
+private val CardShape = RoundedCornerShape(24.dp)
+
+@Composable
+private fun HeroChip(text: String, dot: Color?) {
+    Row(
+        Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.16f)).padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (dot != null) {
+            Box(Modifier.size(8.dp).clip(CircleShape).background(dot))
+            Spacer(Modifier.width(6.dp))
+        }
+        WeSeeText(text, Color.White, 11, FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun BellButton(hasUnread: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(48.dp).clickable(role = Role.Button, onClickLabel = "Abrir notificações", onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(42.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.95f)), contentAlignment = Alignment.Center) {
+            Image(painterResource(R.drawable.ic_bell), if (hasUnread) "Notificações, há novas" else "Notificações", Modifier.size(17.dp))
+        }
+        if (hasUnread) {
+            Box(Modifier.align(Alignment.TopEnd).padding(top = 3.dp, end = 3.dp).size(11.dp).clip(CircleShape)
+                .background(AlertRed).padding(1.5.dp).clip(CircleShape).background(AlertRed))
+        }
+    }
+}
+
+/**
+ * Topo da Home: faixa azul com gradiente (identidade WeSee) com a saudação, quem está sendo acompanhado,
+ * o sino de notificações e os dois estados mais importantes (dispositivo e bateria) sempre visíveis.
+ * Estende-se por baixo da barra de status. O conteúdo seguinte deve "subir" sobre ele (ver overlapTop na tela).
+ */
+@Composable
+internal fun HomeHero(
+    greetingName: String,
+    pessoaNome: String,
+    hasUnread: Boolean,
+    deviceConnected: Boolean,
+    batteryPercent: Int,
+    onBellClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+    Column(
+        modifier.fillMaxWidth().clip(shape)
+            .background(Brush.verticalGradient(listOf(WeSeeBlue, WeSeeDeep)))
+            .statusBarsPadding()
+            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 68.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier.size(48.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.18f))
+                    .semantics { contentDescription = "Avatar de $greetingName" },
+                contentAlignment = Alignment.Center,
+            ) { WeSeeText(greetingName.trim().take(1).uppercase().ifBlank { "R" }, Color.White, 20, FontWeight.Bold) }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                WeSeeText("Olá, $greetingName", Color.White, 24, FontWeight.Bold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+                WeSeeText("Acompanhando $pessoaNome", Color.White.copy(alpha = 0.82f), 12, FontWeight.Medium, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+            }
+            BellButton(hasUnread, onBellClick)
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HeroChip(if (deviceConnected) "Dispositivo conectado" else "Dispositivo desconectado", if (deviceConnected) StatusGreen else AlertRed)
+            HeroChip("Bateria $batteryPercent%", null)
+        }
+    }
+}
+
+/** Card branco flutuante: onde a pessoa está agora (endereço + horário) com o mapa embutido. Tocar no mapa abre a aba Maps. */
+@Composable
+internal fun LocationHomeCard(pessoa: PessoaAcompanhada, onOpenMaps: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier.padding(horizontal = 18.dp).fillMaxWidth()
+            .shadow(12.dp, CardShape, ambientColor = WeSeeBlue.copy(alpha = 0.25f), spotColor = WeSeeBlue.copy(alpha = 0.25f))
+            .clip(CardShape).background(Color.White).padding(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(42.dp).clip(CircleShape).background(WeSeeCard), contentAlignment = Alignment.Center) {
+                Image(painterResource(R.drawable.ic_pin_add), null, Modifier.height(19.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                WeSeeText("Localização de ${pessoa.nome}", WeSeeMid, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+                WeSeeText(pessoa.endereco, WeSeeDeep, 17, FontWeight.Bold, Modifier.fillMaxWidth(), lineHeight = 21, textAlign = TextAlign.Start)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        GuardianMap(pessoa.latitude, pessoa.longitude, Modifier.fillMaxWidth().height(136.dp), interactive = false, onClick = onOpenMaps)
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeCard).padding(horizontal = 12.dp, vertical = 7.dp)) {
+                WeSeeText(pessoa.ultimaAtualizacao, WeSeeBlue, 11, FontWeight.SemiBold)
+            }
+            Spacer(Modifier.weight(1f))
+            Box(
+                Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(50)).clickable(role = Role.Button, onClickLabel = "Abrir a aba de localização", onClick = onOpenMaps),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeBlue).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    WeSeeText("Ver no mapa", Color.White, 12, FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    WeSeeText(text, WeSeeBlue, 16, FontWeight.Bold, modifier.fillMaxWidth().padding(horizontal = 22.dp), textAlign = TextAlign.Start)
+}
+
+/** Cartão de um indicador. O estado aparece em TEXTO e em cor (nunca só pela cor). */
+@Composable
+private fun StatusTile(label: String, value: String, ok: Boolean, okText: String, warnText: String, modifier: Modifier = Modifier, extra: @Composable () -> Unit = {}) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier.shadow(6.dp, shape, ambientColor = WeSeeBlue.copy(alpha = 0.2f), spotColor = WeSeeBlue.copy(alpha = 0.2f))
+            .clip(shape).background(Color.White).padding(14.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "$label: $value. ${if (ok) okText else warnText}" },
+    ) {
+        WeSeeText(label, WeSeeMid, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+        Spacer(Modifier.height(4.dp))
+        WeSeeText(value, WeSeeDeep, 20, FontWeight.Bold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+        Spacer(Modifier.height(10.dp))
+        extra()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(8.dp).clip(CircleShape).background(if (ok) StatusGreen else AlertRed))
+            Spacer(Modifier.width(6.dp))
+            WeSeeText(if (ok) okText else warnText, WeSeeDeep, 11, FontWeight.SemiBold, textAlign = TextAlign.Start)
+        }
+    }
+}
+
+@Composable
+private fun BatteryBar(percent: Int, low: Boolean) {
+    val fraction = remember { Animatable(0f) }
+    LaunchedEffect(percent) { fraction.animateTo(percent.coerceIn(0, 100) / 100f, tween(700)) }
+    Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(WeSeeCard)) {
+        Box(Modifier.fillMaxWidth(fraction.value.coerceAtLeast(0.02f)).fillMaxHeight().clip(CircleShape).background(if (low) AlertRed else StatusGreen))
+    }
+    Spacer(Modifier.height(8.dp))
+}
+
+/** Os 4 indicadores do dispositivo da pessoa acompanhada, em cartões 2 x 2. */
+@Composable
+internal fun StatusSection(dispositivo: Dispositivo, pessoaNome: String, modifier: Modifier = Modifier) {
+    val bateriaBaixa = dispositivo.bateria <= 20
+    Column(modifier.fillMaxWidth().padding(horizontal = 18.dp)) {
+        WeSeeText("Status de $pessoaNome", WeSeeBlue, 16, FontWeight.Bold, Modifier.fillMaxWidth().padding(horizontal = 4.dp), textAlign = TextAlign.Start)
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatusTile("Dispositivo", dispositivo.status, dispositivo.status == "Conectado", "Normal", "Atenção", Modifier.weight(1f).fillMaxHeight())
+            StatusTile("Bateria", "${dispositivo.bateria}%", !bateriaBaixa, "Bateria boa", "Bateria baixa", Modifier.weight(1f).fillMaxHeight()) {
+                BatteryBar(dispositivo.bateria, bateriaBaixa)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatusTile("Localização", if (dispositivo.localizacaoAtivada) "Ativada" else "Desativada", dispositivo.localizacaoAtivada, "Normal", "Atenção", Modifier.weight(1f).fillMaxHeight())
+            StatusTile("IA", if (dispositivo.iaAtivada) "Ativada" else "Desativada", dispositivo.iaAtivada, "Normal", "Atenção", Modifier.weight(1f).fillMaxHeight())
+        }
+    }
+}
