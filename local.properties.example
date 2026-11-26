@@ -1,0 +1,12 @@
+## Copie para "local.properties" (esse arquivo NÃO é versionado). O Android Studio já cria o sdk.dir sozinho.
+
+# Endereço do backend. O PADRÃO (sem esta linha) é o Render: https://backend-wesee-final.onrender.com/
+# Só defina para testar um backend local:
+#  - Emulador ............................ http://10.0.2.2:8080/
+#  - Celular por cabo USB (adb reverse) .. http://localhost:8080/        (rode antes: adb reverse tcp:8080 tcp:8080)
+#  - Celular no mesmo Wi-Fi do PC ........ http://IP-DO-SEU-PC:8080/    (ex.: http://192.168.0.10:8080/)
+# API_BASE_URL=https://backend-wesee-final.onrender.com/
+
+# Chave do Google Maps — opcional. Só o "Maps SDK for Android" é necessário (o app só DESENHA o mapa).
+# Pesquisa de endereço e rotas NÃO usam mais Google Places/Routes: passam pelo backend (Nominatim + OSRM).
+# MAPS_API_KEY=
