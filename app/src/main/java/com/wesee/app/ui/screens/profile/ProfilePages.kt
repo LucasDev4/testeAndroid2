@@ -171,10 +171,10 @@ private fun AppearancePage(onBack: () -> Unit) = SettingsScaffold(stringResource
     Body(stringResource(R.string.appearance_intro))
     val light = stringResource(R.string.theme_light)
     val darkName = stringResource(R.string.theme_dark)
-    ChoiceCard(!dark, light, stringResource(R.string.theme_light_desc), { AppSettings.setDarkTheme(false) }) {
+    ChoiceCard(!dark, light, stringResource(R.string.theme_light_desc), { AppSettings.updateDarkTheme(false) }) {
         ThemePreview(LightPalette, stringResource(R.string.theme_preview_desc, light))
     }
-    ChoiceCard(dark, darkName, stringResource(R.string.theme_dark_desc), { AppSettings.setDarkTheme(true) }) {
+    ChoiceCard(dark, darkName, stringResource(R.string.theme_dark_desc), { AppSettings.updateDarkTheme(true) }) {
         ThemePreview(DarkPalette, stringResource(R.string.theme_preview_desc, darkName))
     }
 }
@@ -188,8 +188,8 @@ private fun LanguagePage(onBack: () -> Unit) = SettingsScaffold(stringResource(R
             WeSeeText(code, Color.White, 14, FontWeight.Bold)
         }
     }
-    ChoiceCard(current == AppLanguage.PT, stringResource(R.string.language_pt), null, { AppSettings.setLanguage(AppLanguage.PT) }) { badge("PT") }
-    ChoiceCard(current == AppLanguage.EN, stringResource(R.string.language_en), null, { AppSettings.setLanguage(AppLanguage.EN) }) { badge("EN") }
+    ChoiceCard(current == AppLanguage.PT, stringResource(R.string.language_pt), null, { AppSettings.updateLanguage(AppLanguage.PT) }) { badge("PT") }
+    ChoiceCard(current == AppLanguage.EN, stringResource(R.string.language_en), null, { AppSettings.updateLanguage(AppLanguage.EN) }) { badge("EN") }
     Body(stringResource(R.string.language_voice_note))
 }
 
@@ -214,7 +214,7 @@ private fun NotificationsPage(onBack: () -> Unit) = SettingsScaffold(stringResou
     val stateText = stringResource(if (enabled) R.string.notifications_state_on else R.string.notifications_state_off)
     Row(
         Modifier.fillMaxWidth().shadow(4.dp, shape).clip(shape).background(WeSeeSurface)
-            .toggleable(value = enabled, role = Role.Switch, onValueChange = { AppSettings.setNotificationsEnabled(it) })
+            .toggleable(value = enabled, role = Role.Switch, onValueChange = { AppSettings.updateNotificationsEnabled(it) })
             .semantics { stateDescription = stateText }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
