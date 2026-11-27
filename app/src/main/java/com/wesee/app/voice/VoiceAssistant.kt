@@ -14,6 +14,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 import java.util.UUID
+import com.wesee.app.settings.AppSettings
 
 /**
  * Configuração da voz do assistente. Altere aqui para escolher uma voz mais adequada:
@@ -21,7 +22,8 @@ import java.util.UUID
  * se for null, usa a primeira voz offline do idioma.
  */
 data class VoiceConfig(
-    val locale: Locale = Locale("pt", "BR"),
+    /** null = idioma escolhido no app (Português/Inglês). */
+    val locale: Locale? = null,
     val voiceName: String? = null,
     val speechRate: Float = 0.95f,
     val pitch: Float = 1.0f,
@@ -39,6 +41,10 @@ class VoiceAssistant(context: Context, private val config: VoiceConfig = VoiceCo
     private var recognizer: SpeechRecognizer? = null
     private val tone: ToneGenerator? = try { ToneGenerator(AudioManager.STREAM_MUSIC, 80) } catch (e: RuntimeException) { null }
 
+    /** Idioma da fala e do reconhecimento: o do app, a menos que [VoiceConfig.locale] force outro. */
+    private val locale: Locale get() = config.locale ?: AppSettings.language.locale
+    private var appliedLocale: Locale? = null
+
     private val tts: TextToSpeech = TextToSpeech(ctx) { status ->
         if (status == TextToSpeech.SUCCESS) {
             applyConfig()
@@ -48,17 +54,36 @@ class VoiceAssistant(context: Context, private val config: VoiceConfig = VoiceCo
     }
 
     private fun applyConfig() {
-        tts.language = config.locale
         tts.setSpeechRate(config.speechRate)
         tts.setPitch(config.pitch)
+        applyLanguage()
+    }
+
+    /**
+     * Coloca a fala no idioma do app (inglês: Locale.US). Se o aparelho não tiver a voz desse idioma, tenta o idioma
+     * base e, por fim, o idioma padrão do aparelho: nunca lança erro e o app continua falando.
+     */
+    private fun applyLanguage() {
+        val wanted = locale
+        if (appliedLocale == wanted) return
+        var effective = wanted
+        var result = tts.setLanguage(wanted)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            for (candidate in listOf(Locale(wanted.language), Locale.getDefault())) {
+                result = tts.setLanguage(candidate)
+                if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) { effective = candidate; break }
+            }
+        }
+        appliedLocale = wanted
         val voices = tts.voices.orEmpty()
         val chosen = voices.firstOrNull { it.name == config.voiceName }
-            ?: voices.firstOrNull { it.locale.language == config.locale.language && !it.isNetworkConnectionRequired }
+            ?: voices.firstOrNull { it.locale.language == effective.language && !it.isNetworkConnectionRequired }
         chosen?.let { tts.voice = it }
     }
 
     fun speak(text: String, whenDone: () -> Unit = {}) {
         val job = {
+            applyLanguage()   // o idioma pode ter mudado desde que o assistente foi criado
             val id = UUID.randomUUID().toString()
             currentUtterance = id
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -106,7 +131,7 @@ class VoiceAssistant(context: Context, private val config: VoiceConfig = VoiceCo
         })
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, config.locale.toLanguageTag())
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.toLanguageTag())
             .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
             .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         main.postDelayed({ if (recognizer === r) r.startListening(intent) }, 350) // deixa o bipe terminar

@@ -38,9 +38,14 @@ import com.wesee.app.ui.components.WeSeeEyes
 import com.wesee.app.ui.components.WeSeeHeader
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.theme.WeSeeBlue
+import com.wesee.app.ui.theme.WeSeeAccent
 import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeSurface
 import com.wesee.app.ui.theme.WeSeeDeep
 import com.wesee.app.voice.*
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.settings.tr
+import com.wesee.app.ui.theme.WeSeeInk
 
 /** Mantém assistente + conversa vivos enquanto a tela existe e pede a permissão do microfone. */
 class VoiceHost(val assistant: VoiceAssistant, val session: VoiceSession)
@@ -57,7 +62,7 @@ fun rememberVoiceHost(
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) host.session.begin()
-        else host.session.announce("Preciso da permissão do microfone para continuar. Ative nas configurações do aplicativo.")
+        else host.session.announce(tr(R.string.voice_mic_permission))
     }
     LaunchedEffect(host) {
         val ok = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -72,8 +77,8 @@ fun rememberVoiceHost(
 private fun BiometricChip(onClick: () -> Unit) {
     Box(Modifier.heightIn(min = 48.dp).clickable(role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
         val shape = RoundedCornerShape(50)
-        Box(Modifier.shadow(3.dp, shape).clip(shape).background(WeSeeCard).padding(horizontal = 14.dp, vertical = 5.dp)) {
-            WeSeeText("Login com biometria", WeSeeBlue, 10, FontWeight.Bold)
+        Box(Modifier.shadow(3.dp, shape).clip(shape).background(WeSeeSurface).padding(horizontal = 14.dp, vertical = 5.dp)) {
+            WeSeeText(stringResource(R.string.voice_biometric_login), WeSeeInk, 10, FontWeight.Bold)
         }
     }
 }
@@ -85,18 +90,18 @@ private fun MicButton(state: VoiceState, onClick: () -> Unit) {
     val pulse by transition.animateFloat(1f, 1.35f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "pulse")
     val spin by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(1000, easing = LinearEasing)), label = "spin")
     val description = when (state) {
-        VoiceState.Listening -> "Microfone ouvindo. Fale agora."
-        VoiceState.Processing -> "Processando a sua resposta."
-        VoiceState.Speaking -> "Assistente falando. Toque para responder."
-        VoiceState.Idle -> "Botão do microfone. Toque duas vezes e responda."
+        VoiceState.Listening -> stringResource(R.string.voice_mic_listening)
+        VoiceState.Processing -> stringResource(R.string.voice_mic_processing)
+        VoiceState.Speaking -> stringResource(R.string.voice_mic_speaking)
+        VoiceState.Idle -> stringResource(R.string.voice_mic_idle)
     }
     Box(Modifier.size(190.dp), contentAlignment = Alignment.Center) {
         if (state == VoiceState.Listening) {
-            Box(Modifier.size(150.dp).scale(pulse).clip(CircleShape).background(WeSeeBlue.copy(alpha = 0.18f)))
+            Box(Modifier.size(150.dp).scale(pulse).clip(CircleShape).background(WeSeeAccent.copy(alpha = 0.18f)))
         }
         if (state == VoiceState.Processing) {
             Canvas(Modifier.size(172.dp).rotate(spin)) {
-                drawArc(WeSeeBlue, 0f, 110f, false, style = Stroke(8.dp.toPx(), cap = StrokeCap.Round))
+                drawArc(WeSeeAccent, 0f, 110f, false, style = Stroke(8.dp.toPx(), cap = StrokeCap.Round))
             }
         }
         Box(
@@ -121,7 +126,7 @@ fun VoiceAuthContent(title: String, state: VoiceState, onMic: () -> Unit, onBiom
         WeSeeEyes(R.drawable.wesee_eyes_guardian)
         Spacer(Modifier.weight(1f))
         MicButton(state, onMic)
-        WeSeeText(title, WeSeeBlue, 24, FontWeight.Bold)
+        WeSeeText(title, WeSeeInk, 24, FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         BiometricChip(onBiometric)
         Spacer(Modifier.height(20.dp))

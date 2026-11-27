@@ -41,11 +41,15 @@ import com.wesee.app.data.NoteColors
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.theme.HostGrotesk
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
-import com.wesee.app.ui.theme.WeSeeDeep
+import com.wesee.app.ui.theme.WeSeeField
+import com.wesee.app.ui.theme.WeSeeInk
+import com.wesee.app.ui.theme.WeSeeInkDeep
+import com.wesee.app.ui.theme.WeSeeSurface
 import com.wesee.app.ui.theme.WeSeeMid
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
-private val HighlightStyle = SpanStyle(background = WeSeeBlue, color = Color.White, fontWeight = FontWeight.Bold)
+private val HighlightStyle = SpanStyle(background = Color(0xFF004789), color = Color.White, fontWeight = FontWeight.Bold)
 
 private fun AnnotatedString.Builder.applyHighlights(length: Int, ranges: List<Pair<Int, Int>>) {
     ranges.forEach { (s, e) ->
@@ -72,9 +76,9 @@ private fun highlightTransformation(ranges: List<Pair<Int, Int>>) = VisualTransf
 private fun ActionChip(label: String, enabled: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(50)
     Box(
-        Modifier.alpha(if (enabled) 1f else 0.45f).clip(shape).background(Color.White)
+        Modifier.alpha(if (enabled) 1f else 0.45f).clip(shape).background(WeSeeField)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 14.dp, vertical = 9.dp),
-    ) { WeSeeText(label, WeSeeBlue, 12, FontWeight.Bold) }
+    ) { WeSeeText(label, WeSeeInk, 12, FontWeight.Bold) }
 }
 
 /** Modal centralizado (dentro do frame) para criar anotação: texto, destaque de trecho e cor. */
@@ -85,8 +89,10 @@ fun NoteEditorOverlay(onDismiss: () -> Unit, onSave: (Note) -> Unit) {
     var colorIndex by remember { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
     val shape = RoundedCornerShape(24.dp)
-    val textStyle = TextStyle(color = WeSeeDeep, fontSize = 15.sp, lineHeight = 20.sp, fontFamily = HostGrotesk)
+    val textStyle = TextStyle(color = WeSeeInkDeep, fontSize = 15.sp, lineHeight = 20.sp, fontFamily = HostGrotesk)
     val canSave = field.text.isNotBlank()
+    val colorLabels = NoteColors.indices.map { stringResource(R.string.note_color_n, it + 1) }
+    val selectedSuffix = stringResource(R.string.note_color_selected_suffix)
     LaunchedEffect(Unit) { focus.requestFocus() }
 
     Box(
@@ -96,46 +102,46 @@ fun NoteEditorOverlay(onDismiss: () -> Unit, onSave: (Note) -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier.padding(20.dp).fillMaxWidth().shadow(16.dp, shape).clip(shape).background(WeSeeCard)
+            Modifier.padding(20.dp).fillMaxWidth().shadow(16.dp, shape).clip(shape).background(WeSeeSurface)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                 .verticalScroll(rememberScrollState()).padding(18.dp),
         ) {
-            WeSeeText("Nova anotação", WeSeeBlue, 20, FontWeight.Bold, textAlign = TextAlign.Start)
+            WeSeeText(stringResource(R.string.note_new_title), WeSeeInk, 20, FontWeight.Bold, textAlign = TextAlign.Start)
             Spacer(Modifier.height(10.dp))
-            Box(Modifier.fillMaxWidth().heightIn(min = 110.dp).clip(RoundedCornerShape(14.dp)).background(Color.White).padding(12.dp)) {
+            Box(Modifier.fillMaxWidth().heightIn(min = 110.dp).clip(RoundedCornerShape(14.dp)).background(WeSeeField).padding(12.dp)) {
                 BasicTextField(
                     value = field,
                     onValueChange = { if (it.text != field.text) highlights = emptyList(); field = it },
-                    textStyle = textStyle, cursorBrush = SolidColor(WeSeeBlue),
+                    textStyle = textStyle, cursorBrush = SolidColor(WeSeeInk),
                     visualTransformation = highlightTransformation(highlights),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                     decorationBox = { inner ->
                         Box {
-                            if (field.text.isEmpty()) BasicText("Lembrar de levar o carregador.", style = textStyle.copy(color = Color(0xFF9AA7B4)))
+                            if (field.text.isEmpty()) BasicText(stringResource(R.string.note_placeholder), style = textStyle.copy(color = Color(0xFF9AA7B4)))
                             inner()
                         }
                     },
                 )
             }
             Spacer(Modifier.height(10.dp))
-            WeSeeText("Selecione um trecho do texto e toque em Destacar.", WeSeeMid, 11, textAlign = TextAlign.Start)
+            WeSeeText(stringResource(R.string.note_hint), WeSeeMid, 11, textAlign = TextAlign.Start)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ActionChip("Destacar seleção", enabled = !field.selection.collapsed) {
+                ActionChip(stringResource(R.string.note_highlight), enabled = !field.selection.collapsed) {
                     highlights = highlights + (field.selection.min to field.selection.max)
                 }
-                if (highlights.isNotEmpty()) ActionChip("Limpar destaques", enabled = true) { highlights = emptyList() }
+                if (highlights.isNotEmpty()) ActionChip(stringResource(R.string.note_clear_highlights), enabled = true) { highlights = emptyList() }
             }
             Spacer(Modifier.height(14.dp))
-            WeSeeText("Cor", WeSeeBlue, 12, FontWeight.SemiBold, textAlign = TextAlign.Start)
+            WeSeeText(stringResource(R.string.note_color), WeSeeInk, 12, FontWeight.SemiBold, textAlign = TextAlign.Start)
             Spacer(Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 NoteColors.forEachIndexed { i, c ->
                     Box(
                         Modifier.size(38.dp).clip(CircleShape).background(Color(c))
-                            .then(if (i == colorIndex) Modifier.border(3.dp, WeSeeBlue, CircleShape) else Modifier)
+                            .then(if (i == colorIndex) Modifier.border(3.dp, WeSeeInk, CircleShape) else Modifier)
                             .clickable(role = Role.RadioButton) { colorIndex = i }
-                            .semantics { contentDescription = "Cor ${i + 1}" + if (i == colorIndex) ", selecionada" else "" },
+                            .semantics { contentDescription = colorLabels[i] + if (i == colorIndex) selectedSuffix else "" },
                     )
                 }
             }
@@ -147,9 +153,9 @@ fun NoteEditorOverlay(onDismiss: () -> Unit, onSave: (Note) -> Unit) {
                         onSave(Note(System.currentTimeMillis(), text, NoteColors[colorIndex], highlights))
                     },
                 contentAlignment = Alignment.Center,
-            ) { WeSeeText("Adicionar anotação", Color.White, 15, FontWeight.Bold) }
+            ) { WeSeeText(stringResource(R.string.note_add), Color.White, 15, FontWeight.Bold) }
             Box(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(role = Role.Button, onClick = onDismiss), contentAlignment = Alignment.Center) {
-                WeSeeText("Cancelar", WeSeeMid, 13, FontWeight.SemiBold)
+                WeSeeText(stringResource(R.string.action_cancel), WeSeeMid, 13, FontWeight.SemiBold)
             }
         }
     }

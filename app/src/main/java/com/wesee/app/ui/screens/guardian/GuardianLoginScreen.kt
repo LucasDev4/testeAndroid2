@@ -22,6 +22,7 @@ import com.wesee.app.ui.components.*
 import com.wesee.app.ui.theme.WeSeeCard
 import com.wesee.app.ui.theme.WeSeeSoftText
 import kotlinx.coroutines.launch
+import com.wesee.app.settings.tr
 
 internal val ErrorColor = Color(0xFFFFC9C9)
 internal val OkColor = Color(0xFFBFF0CE)
@@ -41,19 +42,19 @@ fun GuardianLoginScreen(
 
     fun submit() {
         if (loading) return
-        if (!email.contains("@")) { message = "Informe um e-mail válido." to false; return }
-        if (password.isBlank()) { message = "Informe sua senha." to false; return }
+        if (!email.contains("@")) { message = tr(R.string.err_invalid_email) to false; return }
+        if (password.isBlank()) { message = tr(R.string.err_enter_password) to false; return }
         scope.launch {
             loading = true; message = null
             when (val r = AtlasApi.login(email.trim(), password)) {
                 is ApiResult.Success ->
                     if (r.value.tipo == UserType.RESPONSAVEL) {
                         onLoggedIn(r.value)
-                    } else message = "Essa conta é de usuário PCD. Entre pelo modo PCD visual." to false
+                    } else message = tr(R.string.err_wrong_account_pcd) to false
                 is ApiResult.Error -> {
                     val text = when (r.code) {
-                        401, 404 -> "E-mail ou senha incorretos."
-                        -1 -> "Sem conexão com o servidor."
+                        401, 404 -> tr(R.string.err_bad_credentials)
+                        -1 -> tr(R.string.err_no_connection_short)
                         else -> r.fields.values.firstOrNull() ?: r.message
                     }
                     message = text to false
@@ -87,7 +88,7 @@ fun GuardianLoginScreen(
                 WeSeeText(text, if (ok) OkColor else ErrorColor, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
             }
             Spacer(Modifier.height(16.dp))
-            PanelButton(if (loading) "Aguarde..." else stringResource(R.string.action_login), onClick = ::submit)
+            PanelButton(if (loading) stringResource(R.string.wait_message) else stringResource(R.string.action_login), onClick = ::submit)
             Spacer(Modifier.height(10.dp))
             AuthFooter(stringResource(R.string.no_account_prefix), stringResource(R.string.create_account), onCreateAccount)
         }

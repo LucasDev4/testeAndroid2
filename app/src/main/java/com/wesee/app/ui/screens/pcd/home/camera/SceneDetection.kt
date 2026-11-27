@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import kotlin.math.max
 import kotlin.math.min
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 /** Estado da câmera/IA exibido sobre a prévia. */
 enum class CameraStatus { Starting, Active, Error, SessionExpired, CameraFailed }
@@ -36,28 +38,30 @@ class SceneNarrator(private val assistant: VoiceAssistant) {
 
     /** Devolve o texto falado (ou a descrição atual, mesmo sem falar) para mostrar na legenda. */
     fun onResult(r: DetectionResult, now: Long = SystemClock.elapsedRealtime()): String {
+        val scene = SceneDescriber.scene(r)
+        val alert = SceneDescriber.alert(r)
         if (r.objects.isEmpty()) {
             if (!announcedClear && lastSignature.isNotEmpty() && now - lastSpokenAt >= 2500 && !speaking) {
-                say("Caminho livre.", now)
+                say(tr(R.string.scene_clear_short), now)
                 announcedClear = true
                 lastSignature = ""
             }
-            return r.scene.ifBlank { "Caminho livre." }
+            return scene.ifBlank { tr(R.string.scene_clear_short) }
         }
         announcedClear = false
         val signature = r.objects.map { "${it.label}|${it.position}|${it.proximity == "NEAR"}" }.sorted().joinToString(";")
         val urgent = r.objects.any { it.priority == "HIGH" && it.proximity == "NEAR" }
         val since = now - lastSpokenAt
         when {
-            urgent && r.alert.isNotBlank() && (signature != lastSignature || since >= 5000) -> {
-                say("Atenção! ${r.alert}", now); lastSignature = signature
+            urgent && alert.isNotBlank() && (signature != lastSignature || since >= 5000) -> {
+                say(tr(R.string.scene_alert_prefix, alert), now); lastSignature = signature
             }
-            signature != lastSignature && since >= 3000 && !speaking && r.scene.isNotBlank() -> {
-                say(r.scene, now); lastSignature = signature
+            signature != lastSignature && since >= 3000 && !speaking && scene.isNotBlank() -> {
+                say(scene, now); lastSignature = signature
             }
-            signature == lastSignature && since >= 20000 && !speaking && r.scene.isNotBlank() -> say(r.scene, now)
+            signature == lastSignature && since >= 20000 && !speaking && scene.isNotBlank() -> say(scene, now)
         }
-        return r.scene
+        return scene
     }
 
     fun say(text: String, now: Long = SystemClock.elapsedRealtime()) {
@@ -88,12 +92,12 @@ class SceneDetectionController(
     private var lastErrorSpokenAt = 0L
     private var greeted = false
 
-    fun cameraReady() { if (status == CameraStatus.Starting) statusMessage = "Iniciando a IA..." }
+    fun cameraReady() { if (status == CameraStatus.Starting) statusMessage = tr(R.string.ai_starting) }
 
     fun cameraFailed() {
         status = CameraStatus.CameraFailed
-        statusMessage = "Não consegui abrir a câmera."
-        narrator.say("Não consegui abrir a câmera.")
+        statusMessage = tr(R.string.camera_open_failed)
+        narrator.say(tr(R.string.camera_open_failed))
     }
 
     private fun intervalMs(): Long = min(10_000L, BASE_INTERVAL_MS shl min(failures, 3))
@@ -105,7 +109,7 @@ class SceneDetectionController(
             val now = SystemClock.elapsedRealtime()
             if (now - lastSentAt < intervalMs()) return
             val token = userStore.token
-            if (token == null) { scope.launch { onError(401, "Sessão expirada.") }; return }
+            if (token == null) { scope.launch { onError(401, tr(R.string.session_expired_short)) }; return }
             val jpeg = frameToJpeg(image) ?: return
             inFlight = true
             lastSentAt = now
@@ -127,7 +131,7 @@ class SceneDetectionController(
                 failures = 0
                 if (status != CameraStatus.Active) {
                     status = CameraStatus.Active; statusMessage = null
-                    if (!greeted) { greeted = true; narrator.say("Câmera ligada. Vou descrever o que vejo.") }
+                    if (!greeted) { greeted = true; narrator.say(tr(R.string.camera_on_greeting)) }
                 }
                 caption = narrator.onResult(r.value)
             }
@@ -139,20 +143,20 @@ class SceneDetectionController(
         failures++
         if (code == 401 || code == 403) {
             status = CameraStatus.SessionExpired
-            statusMessage = "Sessão expirada. Entre novamente."
-            narrator.say("Sua sessão expirou. Entre novamente.")
+            statusMessage = tr(R.string.session_expired_login)
+            narrator.say(tr(R.string.session_expired_spoken))
             return
         }
         status = CameraStatus.Error
         statusMessage = when (code) {
-            -1 -> "Sem conexão com o servidor."
-            502, 503, 504 -> "A IA está indisponível agora."
-            else -> "Não consegui analisar a imagem."
+            -1 -> tr(R.string.err_no_connection_short)
+            502, 503, 504 -> tr(R.string.ai_unavailable)
+            else -> tr(R.string.ai_analyze_failed)
         }
         val now = SystemClock.elapsedRealtime()
         if (now - lastErrorSpokenAt >= 30_000 && !narrator.isSpeaking) {
             lastErrorSpokenAt = now
-            narrator.say(statusMessage.orEmpty() + " Vou tentar de novo.")
+            narrator.say(statusMessage.orEmpty() + " " + tr(R.string.will_retry))
         }
     }
 

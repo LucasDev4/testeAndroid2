@@ -1,9 +1,11 @@
 package com.wesee.app.data
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 private fun String?.cleanName(): String = this.orEmpty().trim().replace(Regex("\\s+"), " ")
 
-/** Primeiro nome para saudações ("Olá Gabriel."). Vazio/ausente → "usuário". */
-fun firstNameOf(nome: String?): String = nome.cleanName().substringBefore(' ').ifBlank { "usuário" }
+/** Primeiro nome para saudações ("Olá Gabriel."). Vazio/ausente → "usuário" (ou "user" em inglês). */
+fun firstNameOf(nome: String?): String = nome.cleanName().substringBefore(' ').ifBlank { tr(R.string.default_user_name) }
 
 /**
  * Nome da pessoa acompanhada, derivado do nome do responsável: "Lucas" → "Lucas Jr.".

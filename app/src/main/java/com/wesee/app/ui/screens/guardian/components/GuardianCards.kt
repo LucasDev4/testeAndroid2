@@ -30,7 +30,12 @@ import com.wesee.app.data.Alerta
 import com.wesee.app.data.Dispositivo
 import com.wesee.app.data.PessoaAcompanhada
 import com.wesee.app.ui.components.WeSeeText
+import com.wesee.app.ui.theme.ThemedImage
 import com.wesee.app.ui.theme.WeSeeBlue
+import com.wesee.app.ui.theme.WeSeeSurfaceAlt
+import com.wesee.app.ui.theme.WeSeeTrack
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.ui.theme.WeSeeInk
 
 private val Navy = Color(0xFF00172B)
 private val CardShape = RoundedCornerShape(26.dp)
@@ -43,7 +48,7 @@ fun LocationSummaryCard(pessoa: PessoaAcompanhada, modifier: Modifier = Modifier
         modifier.padding(horizontal = 18.dp).fillMaxWidth().heightIn(min = 128.dp).shadow(10.dp, CardShape).clip(CardShape)
             .background(Brush.verticalGradient(listOf(Navy, WeSeeBlue))).padding(16.dp),
     ) {
-        WeSeeText("Localização de ${pessoa.nome}:", Color.White.copy(alpha = 0.8f), 9, textAlign = TextAlign.Start)
+        WeSeeText(stringResource(R.string.guardian_location_of, pessoa.nome), Color.White.copy(alpha = 0.8f), 9, textAlign = TextAlign.Start)
         Column(Modifier.align(Alignment.Center).fillMaxWidth().padding(top = 10.dp)) {
             WeSeeText(pessoa.endereco, Color.White, 19, FontWeight.SemiBold, Modifier.fillMaxWidth(), lineHeight = 25)
             WeSeeText(pessoa.ultimaAtualizacao, Color.White, 19, FontWeight.SemiBold, Modifier.fillMaxWidth(), lineHeight = 25)
@@ -54,9 +59,9 @@ fun LocationSummaryCard(pessoa: PessoaAcompanhada, modifier: Modifier = Modifier
 @Composable
 fun AlertsTitle(modifier: Modifier = Modifier) {
     Row(modifier.padding(start = 22.dp), verticalAlignment = Alignment.CenterVertically) {
-        Image(painterResource(R.drawable.ic_siren), "Alertas", Modifier.size(20.dp))
+        ThemedImage(painterResource(R.drawable.ic_siren), stringResource(R.string.alerts_icon_desc), Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
-        WeSeeText("Alertas Recentes", WeSeeBlue, 14, FontWeight.SemiBold)
+        WeSeeText(stringResource(R.string.alerts_recent), WeSeeInk, 14, FontWeight.SemiBold)
     }
 }
 
@@ -66,7 +71,7 @@ private fun AlertCard(alerta: Alerta, selected: Boolean, modifier: Modifier) {
     Box(
         modifier.height(78.dp)
             .then(if (selected) Modifier else Modifier.shadow(5.dp, shape))
-            .clip(shape).background(if (selected) WeSeeBlue else Color(0xFFEFF5FB))
+            .clip(shape).background(if (selected) WeSeeBlue else WeSeeSurfaceAlt)
             .semantics(mergeDescendants = true) { contentDescription = "${alerta.titulo} ${alerta.horario}"; this.selected = selected }
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center,
@@ -79,6 +84,7 @@ private fun AlertCard(alerta: Alerta, selected: Boolean, modifier: Modifier) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlertsCarousel(alertas: List<Alerta>, modifier: Modifier = Modifier) {
+    val trackDesc = stringResource(R.string.alerts_carousel_pos)
     val state = rememberLazyListState()
     val density = LocalDensity.current
     val itemWidth = 132.dp
@@ -101,8 +107,8 @@ fun AlertsCarousel(alertas: List<Alerta>, modifier: Modifier = Modifier) {
             itemsIndexed(alertas, key = { _, a -> a.id }) { i, a -> AlertCard(a, i == selectedIndex, Modifier.width(itemWidth)) }
         }
         Spacer(Modifier.height(10.dp))
-        Box(Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0xFFEAF2FB))
-            .semantics { contentDescription = "Posição no carrossel de alertas" }) {
+        Box(Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(WeSeeTrack)
+            .semantics { contentDescription = trackDesc }) {
             Box(Modifier.fillMaxWidth(progress).fillMaxHeight().clip(CircleShape).background(WeSeeBlue))
         }
     }
@@ -122,16 +128,16 @@ private fun StatusRow(label: String, value: String, positive: Boolean) {
 @Composable
 fun StatusCard(dispositivo: Dispositivo, pessoa: PessoaAcompanhada, modifier: Modifier = Modifier) {
     val rows = listOf(
-        Triple("Dispositivo", dispositivo.status, dispositivo.status == "Conectado"),
-        Triple("Bateria", "${dispositivo.bateria}%", dispositivo.bateria > 20),
-        Triple("Localização", if (dispositivo.localizacaoAtivada) "Ativada" else "Desativada", dispositivo.localizacaoAtivada),
-        Triple("IA", if (dispositivo.iaAtivada) "Ativada" else "Desativada", dispositivo.iaAtivada),
+        Triple(stringResource(R.string.status_device), dispositivo.status, dispositivo.conectado),
+        Triple(stringResource(R.string.status_battery), "${dispositivo.bateria}%", dispositivo.bateria > 20),
+        Triple(stringResource(R.string.status_location), stringResource(if (dispositivo.localizacaoAtivada) R.string.state_on else R.string.state_off), dispositivo.localizacaoAtivada),
+        Triple(stringResource(R.string.status_ai), stringResource(if (dispositivo.iaAtivada) R.string.state_on else R.string.state_off), dispositivo.iaAtivada),
     )
     Column(
         modifier.padding(horizontal = 18.dp).fillMaxWidth().shadow(10.dp, CardShape).clip(CardShape)
             .background(Brush.verticalGradient(listOf(WeSeeBlue, Navy))).padding(18.dp),
     ) {
-        WeSeeText("Status de ${pessoa.nome}", Color.White.copy(alpha = 0.85f), 14, FontWeight.SemiBold, textAlign = TextAlign.Start)
+        WeSeeText(stringResource(R.string.status_of, pessoa.nome), Color.White.copy(alpha = 0.85f), 14, FontWeight.SemiBold, textAlign = TextAlign.Start)
         Spacer(Modifier.height(8.dp))
         rows.forEachIndexed { i, (label, value, ok) ->
             if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.25f)))

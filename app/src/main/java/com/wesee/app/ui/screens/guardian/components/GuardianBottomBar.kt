@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
 import com.wesee.app.ui.components.NavItem
+import com.wesee.app.ui.theme.WeSeeBarBg
 
 enum class GuardianTab { Home, Maps, Account }
 
@@ -17,7 +18,7 @@ enum class GuardianTab { Home, Maps, Account }
 @Composable
 fun GuardianBottomBar(current: GuardianTab, onHome: () -> Unit, onMaps: () -> Unit, onAccount: (() -> Unit)? = null) {
     val shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)
-    Row(Modifier.fillMaxWidth().shadow(10.dp, shape).background(Color.White, shape).navigationBarsPadding().height(62.dp)) {
+    Row(Modifier.fillMaxWidth().shadow(10.dp, shape).background(WeSeeBarBg, shape).navigationBarsPadding().height(62.dp)) {
         NavItem("Home", if (current == GuardianTab.Home) R.drawable.ic_home_blue else R.drawable.nav_home,
             current == GuardianTab.Home, onHome, Modifier.weight(1f))
         NavItem("Maps", if (current == GuardianTab.Maps) R.drawable.ic_pin_add else R.drawable.nav_maps,

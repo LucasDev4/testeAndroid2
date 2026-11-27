@@ -16,15 +16,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
 import com.wesee.app.ui.components.*
+import com.wesee.app.ui.theme.ThemedImage
 import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeSurface
+import androidx.compose.ui.res.stringResource
 
 @Composable
 private fun Choice(icon: Int, label: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            Modifier.size(108.dp).clip(RoundedCornerShape(14.dp)).background(WeSeeCard).clickable(onClick = onClick),
+            Modifier.size(108.dp).clip(RoundedCornerShape(14.dp)).background(WeSeeSurface).clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
-        ) { Image(painterResource(icon), label, Modifier.size(58.dp)) }
+        ) { ThemedImage(painterResource(icon), label, Modifier.size(58.dp)) }
         Spacer(Modifier.height(12.dp))
         WeSeeText(label, Color.White, 12)
     }
@@ -44,11 +47,11 @@ fun WhoAreYouScreen(onSelectPcd: () -> Unit = {}, onSelectGuardian: () -> Unit =
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(22.dp))
-            WeSeeText("Quem é você?", Color.White, 34, FontWeight.SemiBold)
+            WeSeeText(stringResource(R.string.who_title), Color.White, 34, FontWeight.SemiBold)
             Spacer(Modifier.height(22.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(36.dp), verticalAlignment = Alignment.Top) {
-                Choice(R.drawable.ic_pcd_cane, "PCD visual", onSelectPcd)
-                Choice(R.drawable.ic_binoculars, "Responsável do PCD", onSelectGuardian)
+                Choice(R.drawable.ic_pcd_cane, stringResource(R.string.who_pcd), onSelectPcd)
+                Choice(R.drawable.ic_binoculars, stringResource(R.string.who_guardian), onSelectGuardian)
             }
         }
     }

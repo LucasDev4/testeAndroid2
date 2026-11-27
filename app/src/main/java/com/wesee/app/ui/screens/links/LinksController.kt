@@ -13,6 +13,8 @@ import com.wesee.app.network.VinculoItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 /** Dígitos do código de vinculação. Deve ser igual a `vinculo.codigo-tamanho` do backend. */
 const val VINCULO_CODE_LENGTH = 6
@@ -46,7 +48,7 @@ class LinksController(
     /** Momento (elapsedRealtime) em que o código gerado expira, calculado com a validade informada pelo servidor. */
     var expiresAtMs by mutableLongStateOf(0L); private set
 
-    val title: String get() = if (isGuardian) "Pessoas vinculadas:" else "Meus Responsáveis:"
+    val title: String get() = tr(if (isGuardian) R.string.links_title_guardian else R.string.links_title_pcd)
 
     fun open() { step = LinksStep.List; notice = null; refresh() }
     fun close() { step = LinksStep.Closed; resetCode() }
@@ -66,7 +68,7 @@ class LinksController(
 
     fun refresh() {
         if (loadingList) return
-        val t = token() ?: run { listError = "Sessão expirada. Entre novamente."; return }
+        val t = token() ?: run { listError = tr(R.string.session_expired_login); return }
         scope.launch {
             loadingList = true; listError = null
             when (val r = AtlasApi.listarVinculos(t)) {
@@ -93,8 +95,8 @@ class LinksController(
 
     fun confirm() {
         if (busy) return
-        if (input.length != VINCULO_CODE_LENGTH) { codeError = "Digite os $VINCULO_CODE_LENGTH números do código."; return }
-        val t = token() ?: run { codeError = "Sessão expirada. Entre novamente."; return }
+        if (input.length != VINCULO_CODE_LENGTH) { codeError = tr(R.string.links_code_incomplete, VINCULO_CODE_LENGTH); return }
+        val t = token() ?: run { codeError = tr(R.string.session_expired_login); return }
         scope.launch {
             busy = true; codeError = null
             when (val r = AtlasApi.solicitarVinculo(t, input)) {
@@ -104,8 +106,8 @@ class LinksController(
                         is ApiResult.Success -> items = l.value
                         is ApiResult.Error -> Unit
                     }
-                    notice = if (r.value.status == "ATIVO") "Vínculo ativado com ${r.value.nome}."
-                    else "Solicitação enviada. Aguardando confirmação de ${r.value.nome}."
+                    notice = if (r.value.status == "ATIVO") tr(R.string.links_activated, r.value.nome)
+                    else tr(R.string.links_request_sent, r.value.nome)
                     resetCode(); step = LinksStep.List
                 }
                 is ApiResult.Error -> { codeError = friendly(r); busy = false }
@@ -117,7 +119,7 @@ class LinksController(
 
     fun generate() {
         if (busy) return
-        val t = token() ?: run { codeError = "Sessão expirada. Entre novamente."; return }
+        val t = token() ?: run { codeError = tr(R.string.session_expired_login); return }
         scope.launch {
             busy = true; codeError = null; generated = null
             when (val r = AtlasApi.gerarCodigo(t)) {
@@ -145,7 +147,7 @@ class LinksController(
                 val novo = r.value.firstOrNull { it.id !in known }
                 if (novo != null) {
                     items = r.value
-                    notice = "${novo.nome} agora é seu responsável."
+                    notice = tr(R.string.links_now_guardian, novo.nome)
                     resetCode(); step = LinksStep.List
                     return
                 }
@@ -154,9 +156,9 @@ class LinksController(
     }
 
     private fun friendly(e: ApiResult.Error): String = when (e.code) {
-        -1 -> "Sem conexão com o servidor. Verifique a internet e tente de novo."
-        401 -> "Sessão expirada. Entre novamente."
+        -1 -> tr(R.string.err_no_connection_try)
+        401 -> tr(R.string.session_expired_login)
         400, 403, 409, 429 -> e.fields.values.firstOrNull() ?: e.message // mensagens do backend já são claras
-        else -> "Não foi possível concluir agora. Tente novamente."
+        else -> tr(R.string.err_generic_retry)
     }
 }

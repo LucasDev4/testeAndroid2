@@ -16,4 +16,3 @@ val IstokWeb = FontFamily(
     Font(R.font.istok_web_regular, FontWeight.Normal),
     Font(R.font.istok_web_bold, FontWeight.Bold),
 )
-val WeSeeMid = androidx.compose.ui.graphics.Color(0xFF3F78B5)

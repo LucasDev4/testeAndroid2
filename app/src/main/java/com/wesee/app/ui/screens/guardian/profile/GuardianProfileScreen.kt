@@ -11,10 +11,12 @@ import com.wesee.app.data.acompanhadoName
 import com.wesee.app.ui.screens.guardian.components.GuardianBottomBar
 import com.wesee.app.ui.screens.guardian.components.GuardianTab
 import com.wesee.app.ui.screens.profile.ProfileContent
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
 /**
  * Perfil do Responsável. Nome e inicial vêm da sessão; "Responsável por" = nome do responsável + " Jr.".
- * Localização textual demonstrativa (sem GPS). Só foto e Logout têm ação.
+ * Localização textual demonstrativa (sem GPS). Foto, vínculos, configurações e Logout têm ação.
  */
 @Composable
 fun GuardianProfileScreen(
@@ -28,10 +30,10 @@ fun GuardianProfileScreen(
     val links = remember { LinksController(scope, userStore, isGuardian = true) }
     ProfileContent(
         userStore = userStore,
-        locationText = "São Paulo - SP, Brasil",
-        relationText = "Responsável por: ${acompanhadoName(userStore.name)}",
+        locationText = stringResource(R.string.profile_guardian_location_demo),
+        relationText = stringResource(R.string.profile_guardian_of, acompanhadoName(userStore.name)),
         onBack = onBack, onLogout = onLogout, showName = false,
-        linksOption = LinksOption("Pessoas vinculadas") { links.open() },
+        linksOption = LinksOption(stringResource(R.string.opt_linked_people)) { links.open() },
         overlay = { LinksModal(links) },
     ) { GuardianBottomBar(GuardianTab.Account, onHome = onHome, onMaps = onMaps, onAccount = {}) }
 }

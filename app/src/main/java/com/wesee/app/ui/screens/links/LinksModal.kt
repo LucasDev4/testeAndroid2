@@ -57,19 +57,26 @@ import com.wesee.app.network.VinculoItem
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.screens.guardian.components.StatusGreen
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeAccent
+import com.wesee.app.ui.theme.WeSeeField
+import com.wesee.app.ui.theme.WeSeeInk
+import com.wesee.app.ui.theme.WeSeeSurface
 import com.wesee.app.ui.theme.WeSeeMid
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
+import com.wesee.app.settings.AppSettings
 
 private val SoftBlue = Color(0xFF8FC9FF)
 private val Amber = Color(0xFFFFB300)
-private val ErrorText = Color(0xFFB3261E)
+/** Vermelho de erro com contraste suficiente em cada tema. */
+private val ErrorText: Color get() = if (AppSettings.darkTheme) Color(0xFFFF8A80) else Color(0xFFB3261E)
 
 @Composable
 private fun Spinner() {
     val transition = rememberInfiniteTransition(label = "spinner")
     val angle by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart), label = "angle")
     Canvas(Modifier.size(28.dp).rotate(angle)) {
-        drawArc(WeSeeBlue, 0f, 100f, false, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+        drawArc(WeSeeAccent, 0f, 100f, false, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
     }
 }
 
@@ -90,8 +97,8 @@ private fun SmallButton(label: String, enabled: Boolean = true, onClick: () -> U
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.clip(RoundedCornerShape(50)).background(Color.White).padding(horizontal = 14.dp, vertical = 7.dp)) {
-            WeSeeText(label, WeSeeBlue, 12, FontWeight.Bold)
+        Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeField).padding(horizontal = 14.dp, vertical = 7.dp)) {
+            WeSeeText(label, WeSeeInk, 12, FontWeight.Bold)
         }
     }
 }
@@ -102,22 +109,24 @@ private fun LiveMessage(text: String, color: Color) {
     WeSeeText(text, color, 12, FontWeight.SemiBold, Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite })
 }
 
-private fun statusLabel(status: String) = when (status) {
-    "ATIVO" -> "Vínculo ativo"
-    "PENDENTE" -> "Aguardando confirmação"
+@Composable
+private fun statusLabel(status: String): String = when (status) {
+    "ATIVO" -> stringResource(R.string.status_active)
+    "PENDENTE" -> stringResource(R.string.status_pending)
     else -> status
 }
 
 @Composable
 private fun LinkCard(item: VinculoItem) {
+    val statusText = statusLabel(item.status)
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(WeSeeBlue).padding(horizontal = 12.dp, vertical = 10.dp)
-            .semantics(mergeDescendants = true) { contentDescription = "${item.nome}, ${statusLabel(item.status).lowercase()}" },
+            .semantics(mergeDescendants = true) { contentDescription = "${item.nome}, ${statusText.lowercase()}" },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             WeSeeText(item.nome, Color.White, 13, FontWeight.Bold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
-            WeSeeText(statusLabel(item.status), Color.White.copy(alpha = 0.85f), 10, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+            WeSeeText(statusText, Color.White.copy(alpha = 0.85f), 10, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
         }
         Spacer(Modifier.width(8.dp))
         // além do texto, o indicador de cor reforça o estado (nunca só a cor)
@@ -127,19 +136,19 @@ private fun LinkCard(item: VinculoItem) {
 
 @Composable
 private fun ListContent(c: LinksController) {
-    WeSeeText(c.title, WeSeeBlue, 20, FontWeight.Bold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
+    WeSeeText(c.title, WeSeeInk, 20, FontWeight.Bold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
     Spacer(Modifier.height(10.dp))
     Box(Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 230.dp), contentAlignment = Alignment.Center) {
         val error = c.listError
         when {
             c.loadingList -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spinner(); Spacer(Modifier.height(6.dp)); WeSeeText("Carregando...", WeSeeMid, 12, FontWeight.SemiBold)
+                Spinner(); Spacer(Modifier.height(6.dp)); WeSeeText(stringResource(R.string.loading), WeSeeMid, 12, FontWeight.SemiBold)
             }
             error != null -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 LiveMessage(error, ErrorText)
-                SmallButton("Tentar novamente") { c.refresh() }
+                SmallButton(stringResource(R.string.action_retry)) { c.refresh() }
             }
-            c.items.isEmpty() -> WeSeeText("Sem vínculo ainda...", WeSeeBlue, 13, FontWeight.SemiBold)
+            c.items.isEmpty() -> WeSeeText(stringResource(R.string.links_empty), WeSeeInk, 13, FontWeight.SemiBold)
             else -> LazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(c.items, key = { it.id }) { LinkCard(it) }
             }
@@ -147,10 +156,10 @@ private fun ListContent(c: LinksController) {
     }
     c.notice?.let {
         Spacer(Modifier.height(8.dp))
-        LiveMessage(it, WeSeeBlue)
+        LiveMessage(it, WeSeeInk)
     }
     Spacer(Modifier.height(12.dp))
-    PrimaryButton("Adicionar vínculo", enabled = !c.loadingList) { c.startAdd() }
+    PrimaryButton(stringResource(R.string.links_add), enabled = !c.loadingList) { c.startAdd() }
 }
 
 /** Seis caixas (vazias = azul cheio; preenchidas mostram o dígito em branco). [active] destaca a próxima posição. */
@@ -175,15 +184,17 @@ private fun CodeInput(value: String, enabled: Boolean, onChange: (String) -> Uni
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { focus.requestFocus(); keyboard?.show() }
     val filled = value.length
+    val fieldDesc = stringResource(R.string.links_code_field_desc, VINCULO_CODE_LENGTH)
+    val stateText = if (filled == VINCULO_CODE_LENGTH) stringResource(R.string.links_all_filled)
+    else stringResource(R.string.links_digits_progress, filled, VINCULO_CODE_LENGTH, VINCULO_CODE_LENGTH - filled)
     BasicTextField(
         value = value, onValueChange = onChange, enabled = enabled, singleLine = true,
         textStyle = TextStyle(color = Color.Transparent), cursorBrush = SolidColor(Color.Transparent),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onDone() }),
         modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics {
-            contentDescription = "Código de vinculação com $VINCULO_CODE_LENGTH dígitos"
-            stateDescription = if (filled == VINCULO_CODE_LENGTH) "Todos os dígitos preenchidos"
-            else "$filled de $VINCULO_CODE_LENGTH dígitos preenchidos, faltam ${VINCULO_CODE_LENGTH - filled}"
+            contentDescription = fieldDesc
+            stateDescription = stateText
         },
         decorationBox = { inner ->
             Box {
@@ -197,15 +208,15 @@ private fun CodeInput(value: String, enabled: Boolean, onChange: (String) -> Uni
 @Composable
 private fun GuardianCodeContent(c: LinksController) {
     val clipboard = LocalClipboardManager.current
-    WeSeeText("Insira o código", WeSeeBlue, 18, FontWeight.SemiBold, Modifier.fillMaxWidth())
+    WeSeeText(stringResource(R.string.links_enter_code), WeSeeInk, 18, FontWeight.SemiBold, Modifier.fillMaxWidth())
     Spacer(Modifier.height(12.dp))
     CodeInput(c.input, enabled = !c.busy, onChange = c::onInput, onDone = { c.confirm() })
     c.codeError?.let { Spacer(Modifier.height(8.dp)); LiveMessage(it, ErrorText) }
     Spacer(Modifier.height(12.dp))
-    PrimaryButton(if (c.busy) "Enviando..." else "Confirmar", enabled = c.input.length == VINCULO_CODE_LENGTH && !c.busy) { c.confirm() }
+    PrimaryButton(stringResource(if (c.busy) R.string.links_sending else R.string.action_confirm), enabled = c.input.length == VINCULO_CODE_LENGTH && !c.busy) { c.confirm() }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        SmallButton("Colar", enabled = !c.busy) { c.onInput(clipboard.getText()?.text.orEmpty()) }
-        SmallButton("Voltar", enabled = !c.busy) { c.back() }
+        SmallButton(stringResource(R.string.action_paste), enabled = !c.busy) { c.onInput(clipboard.getText()?.text.orEmpty()) }
+        SmallButton(stringResource(R.string.action_back), enabled = !c.busy) { c.back() }
     }
 }
 
@@ -222,45 +233,48 @@ private fun PcdCodeContent(c: LinksController) {
     }
     LaunchedEffect(c.generated) { if (c.generated != null) c.watchForUse() }
 
-    WeSeeText("Código", WeSeeBlue, 18, FontWeight.SemiBold, Modifier.fillMaxWidth())
-    WeSeeText("Código de vinculação para compartilhar com o responsável.", WeSeeMid, 10, modifier = Modifier.fillMaxWidth())
+    WeSeeText(stringResource(R.string.links_code_title), WeSeeInk, 18, FontWeight.SemiBold, Modifier.fillMaxWidth())
+    WeSeeText(stringResource(R.string.links_code_hint), WeSeeMid, 10, modifier = Modifier.fillMaxWidth())
     Spacer(Modifier.height(12.dp))
     val generated = c.generated
     val error = c.codeError
     when {
         c.busy -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spinner(); Spacer(Modifier.height(6.dp)); WeSeeText("Gerando código...", WeSeeMid, 12, FontWeight.SemiBold)
+            Spinner(); Spacer(Modifier.height(6.dp)); WeSeeText(stringResource(R.string.links_generating), WeSeeMid, 12, FontWeight.SemiBold)
         }
         generated != null -> {
             val code = generated.codigo
+            val codeDesc = stringResource(R.string.links_code_desc, code.toList().joinToString(", "))
+            val shareText = stringResource(R.string.links_share_text, code)
+            val chooserTitle = stringResource(R.string.links_share_chooser)
             CodeBoxes(code, modifier = Modifier.clearAndSetSemantics {
-                contentDescription = "Seu código de vinculação: ${code.toList().joinToString(", ")}"
+                contentDescription = codeDesc
             })
             Spacer(Modifier.height(8.dp))
             if (remaining > 0) {
-                WeSeeText(String.format("Expira em %02d:%02d", remaining / 60, remaining % 60), WeSeeMid, 11, FontWeight.SemiBold, Modifier.fillMaxWidth())
+                WeSeeText(stringResource(R.string.links_expires_in, remaining / 60, remaining % 60), WeSeeMid, 11, FontWeight.SemiBold, Modifier.fillMaxWidth())
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    SmallButton(if (copied) "Copiado" else "Copiar") { clipboard.setText(AnnotatedString(code)); copied = true }
-                    SmallButton("Compartilhar") {
+                    SmallButton(stringResource(if (copied) R.string.links_copied_btn else R.string.links_copy)) { clipboard.setText(AnnotatedString(code)); copied = true }
+                    SmallButton(stringResource(R.string.links_share)) {
                         val send = Intent(Intent.ACTION_SEND).setType("text/plain")
-                            .putExtra(Intent.EXTRA_TEXT, "Código de vinculação do WeSee: $code (válido por pouco tempo)")
-                        context.startActivity(Intent.createChooser(send, "Compartilhar código"))
+                            .putExtra(Intent.EXTRA_TEXT, shareText)
+                        context.startActivity(Intent.createChooser(send, chooserTitle))
                     }
                 }
-                if (copied) LiveMessage("Código copiado.", WeSeeBlue)
+                if (copied) LiveMessage(stringResource(R.string.links_code_copied), WeSeeInk)
             } else {
-                LiveMessage("Código expirado.", ErrorText)
+                LiveMessage(stringResource(R.string.links_code_expired), ErrorText)
                 Spacer(Modifier.height(8.dp))
-                PrimaryButton("Gerar novo código") { c.generate() }
+                PrimaryButton(stringResource(R.string.links_generate_new)) { c.generate() }
             }
         }
         error != null -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             LiveMessage(error, ErrorText)
-            SmallButton("Tentar novamente") { c.generate() }
+            SmallButton(stringResource(R.string.action_retry)) { c.generate() }
         }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        SmallButton("Voltar") { c.back() }
+        SmallButton(stringResource(R.string.action_back)) { c.back() }
     }
 }
 
@@ -272,6 +286,7 @@ private fun PcdCodeContent(c: LinksController) {
 fun LinksModal(c: LinksController) {
     BackHandler(enabled = c.step != LinksStep.Closed) { c.back() }
     if (c.step == LinksStep.Closed) return
+    val codePaneTitle = stringResource(R.string.links_code_pane)
     val shape = RoundedCornerShape(24.dp)
     Box(
         Modifier.fillMaxSize().background(Color(0x99001A33))
@@ -280,10 +295,10 @@ fun LinksModal(c: LinksController) {
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier.fillMaxWidth(0.84f).shadow(16.dp, shape).clip(shape).background(WeSeeCard)
+            Modifier.fillMaxWidth(0.84f).shadow(16.dp, shape).clip(shape).background(WeSeeSurface)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                 .padding(18.dp)
-                .semantics { paneTitle = if (c.step == LinksStep.List) c.title else "Código de vinculação" },
+                .semantics { paneTitle = if (c.step == LinksStep.List) c.title else codePaneTitle },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when (c.step) {

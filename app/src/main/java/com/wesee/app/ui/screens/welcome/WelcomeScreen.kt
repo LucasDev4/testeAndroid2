@@ -12,14 +12,19 @@ import androidx.compose.ui.unit.dp
 import com.wesee.app.ui.components.*
 import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.ui.theme.WeSeeCard
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
+import com.wesee.app.ui.theme.themed
+import com.wesee.app.ui.theme.WeSeeMid
+import com.wesee.app.ui.theme.WeSeeInk
 
 /** Frase de destaque; as aspas são elementos separados, acima e nas extremidades. */
 @Composable
 private fun Tagline() {
     Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-        WeSeeText("“", WeSeeBlue, 60, FontWeight.ExtraBold, Modifier.align(Alignment.TopStart), 60)
-        WeSeeText("”", WeSeeBlue, 60, FontWeight.ExtraBold, Modifier.align(Alignment.TopEnd), 60)
-        WeSeeText("Tecnologia que guia.", WeSeeBlue, 32, FontWeight.ExtraBold,
+        WeSeeText("“", WeSeeInk, 60, FontWeight.ExtraBold, Modifier.align(Alignment.TopStart), 60)
+        WeSeeText("”", WeSeeInk, 60, FontWeight.ExtraBold, Modifier.align(Alignment.TopEnd), 60)
+        WeSeeText(stringResource(R.string.welcome_quote), WeSeeInk, 32, FontWeight.ExtraBold,
             Modifier.align(Alignment.Center).padding(top = 26.dp))
     }
 }
@@ -35,12 +40,12 @@ fun WelcomeScreen(onLogin: () -> Unit = {}, onRegister: () -> Unit = {}) {
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { WeSeeEyes() }
         Tagline()
         Spacer(Modifier.height(10.dp))
-        WeSeeText("O WeSee é um sistema que utiliza IA com câmera\npara identificar obstáculos.",
-            Color(0xFF2B3A4A), 10, modifier = Modifier.padding(horizontal = 24.dp))
+        WeSeeText(stringResource(R.string.welcome_desc),
+            themed(Color(0xFF2B3A4A), WeSeeMid), 10, modifier = Modifier.padding(horizontal = 24.dp))
         Spacer(Modifier.height(40.dp))
-        AppButton("Login", primary = false, onClick = onLogin)
+        AppButton(stringResource(R.string.action_login), primary = false, onClick = onLogin)
         Spacer(Modifier.height(10.dp))
-        AppButton("Cadastro", primary = true, onClick = onRegister)
+        AppButton(stringResource(R.string.action_register), primary = true, onClick = onRegister)
         Spacer(Modifier.height(28.dp))
     }
 }

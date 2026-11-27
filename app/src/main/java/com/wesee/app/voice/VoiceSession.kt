@@ -4,6 +4,10 @@ import android.speech.SpeechRecognizer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wesee.app.R
+import com.wesee.app.settings.tr
+import com.wesee.app.settings.AppSettings
+import com.wesee.app.settings.AppLanguage
 
 enum class VoiceState { Idle, Speaking, Listening, Processing }
 enum class FieldKind { Name, Email, Password, ConfirmPassword }
@@ -12,6 +16,9 @@ data class VoiceStep(val key: FieldKind, val question: String, val secret: Boole
 private val digitWords = mapOf(
     "zero" to '0', "um" to '1', "uma" to '1', "dois" to '2', "duas" to '2', "três" to '3', "tres" to '3',
     "quatro" to '4', "cinco" to '5', "seis" to '6', "meia" to '6', "sete" to '7', "oito" to '8', "nove" to '9',
+    // inglês (aceito em qualquer idioma: só vale quando a pessoa realmente diz esses números)
+    "oh" to '0', "one" to '1', "two" to '2', "to" to '2', "too" to '2', "three" to '3', "four" to '4', "for" to '4',
+    "five" to '5', "six" to '6', "seven" to '7', "eight" to '8', "nine" to '9',
 )
 
 /** "um dois três 4 5 seis" → "123456" (o backend exige senha com exatamente 6 números). */
@@ -45,7 +52,7 @@ class VoiceSession(
     fun begin() {
         if (started) return
         started = true
-        say("$intro ${steps[0].question} Toque no botão grande para responder.")
+        say("$intro ${steps[0].question} " + tr(R.string.voice_tap_to_answer))
     }
 
     fun announce(text: String) = say(text)
@@ -107,41 +114,41 @@ class VoiceSession(
                 if (value == answers[FieldKind.Password]) {
                     answers[step.key] = value
                     assistant.beep(Beep.Success)
-                    say("Senhas confirmadas.") { next() }
+                    say(tr(R.string.voice_passwords_confirmed)) { next() }
                 } else {
                     assistant.beep(Beep.Error)
                     index = steps.indexOfFirst { it.key == FieldKind.Password }
-                    say("As senhas não são iguais. ${steps[index].question}")
+                    say(tr(R.string.voice_passwords_mismatch) + " " + steps[index].question)
                 }
             step.key == FieldKind.Password && value.length != 6 -> {
                 assistant.beep(Beep.Error)
-                say("A senha precisa ter exatamente 6 números. ${step.question}")
+                say(tr(R.string.voice_password_len) + " " + step.question)
             }
             step.secret -> {
                 answers[step.key] = value
                 assistant.beep(Beep.Success)
-                say("Senha recebida.") { next() }
+                say(tr(R.string.voice_password_received)) { next() }
             }
             else -> {
                 pending = value
                 assistant.beep(Beep.Success)
-                say("Entendi: ${spoken(value)}. Está correto? Toque no botão e diga sim ou não.")
+                say(tr(R.string.voice_understood_confirm, spoken(value)))
             }
         }
     }
 
     private fun confirm(value: String, text: String) {
         val words = text.lowercase().split(Regex("\\W+"))
-        val no = words.any { it in setOf("não", "nao", "errado", "errada") }
-        val yes = words.any { it in setOf("sim", "correto", "certo", "isso", "confirmo") }
+        val no = words.any { it in setOf("não", "nao", "errado", "errada", "no", "nope", "wrong", "incorrect") }
+        val yes = words.any { it in setOf("sim", "correto", "certo", "isso", "confirmo", "yes", "yeah", "yep", "correct", "right", "confirm") }
         when {
             yes && !no -> {
                 pending = null
                 answers[steps[index].key] = value
-                say("Ótimo.") { next() }
+                say(tr(R.string.voice_great)) { next() }
             }
-            no -> { pending = null; say("Tudo bem. ${steps[index].question}") }
-            else -> fail(SpeechRecognizer.ERROR_NO_MATCH, "Não entendi. Toque no botão e diga sim ou não.")
+            no -> { pending = null; say(tr(R.string.voice_alright) + " " + steps[index].question) }
+            else -> fail(SpeechRecognizer.ERROR_NO_MATCH, tr(R.string.voice_not_understood_yesno))
         }
     }
 
@@ -160,13 +167,13 @@ class VoiceSession(
         assistant.beep(Beep.Error)
         say(message ?: when (code) {
             SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
-                "Não consegui ouvir. Toque no botão e responda novamente."
+                tr(R.string.voice_err_no_match)
             SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
-                "Sem conexão para reconhecer a voz. Verifique a internet e tente de novo."
+                tr(R.string.voice_err_network)
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
-                "Preciso da permissão do microfone. Ative nas configurações do aplicativo."
-            -1 -> "O reconhecimento de voz não está disponível neste aparelho."
-            else -> "Ocorreu um erro. Toque no botão e tente novamente."
+                tr(R.string.voice_err_permission)
+            -1 -> tr(R.string.voice_err_unavailable)
+            else -> tr(R.string.voice_err_generic)
         })
     }
 
@@ -176,9 +183,16 @@ class VoiceSession(
         FieldKind.Email -> text.lowercase()
             .replace(Regex("\\s*arroba\\s*"), "@").replace(Regex("\\s+ponto\\s+"), ".")
             .replace(Regex("\\s+(sublinhado|underline)\\s+"), "_").replace(Regex("\\s+traço\\s+"), "-")
+            .let { if (AppSettings.language == AppLanguage.EN) englishSpokenEmail(it) else it }
             .replace(" ", "")
         FieldKind.Password, FieldKind.ConfirmPassword -> spokenToDigits(text)
     }
 
-    private fun spoken(value: String) = value.replace("@", " arroba ").replace(".", " ponto ")
+    /** "john at gmail dot com" → "john@gmail.com" (só no modo inglês). */
+    private fun englishSpokenEmail(t: String) = t.replace(Regex("\\s+at\\s+"), "@").replace(Regex("\\s+dot\\s+"), ".")
+        .replace(Regex("\\s+(dash|hyphen)\\s+"), "-")
+
+    private fun spoken(value: String): String =
+        if (AppSettings.language == AppLanguage.EN) value.replace("@", " at ").replace(".", " dot ")
+        else value.replace("@", " arroba ").replace(".", " ponto ")
 }

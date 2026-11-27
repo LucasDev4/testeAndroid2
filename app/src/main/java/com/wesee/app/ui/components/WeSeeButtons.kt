@@ -14,7 +14,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeSurface
+import com.wesee.app.ui.theme.WeSeeInk
 
 /** Botões grandes da tela inicial (Login = secundário, Cadastro = principal). */
 @Composable
@@ -23,10 +24,10 @@ fun AppButton(label: String, primary: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth(0.88f).height(44.dp)
             .then(if (primary) Modifier else Modifier.shadow(6.dp, shape))
-            .clip(shape).background(if (primary) WeSeeBlue else WeSeeCard)
+            .clip(shape).background(if (primary) WeSeeBlue else WeSeeSurface)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { WeSeeText(label, if (primary) Color.White else WeSeeBlue, 16, FontWeight.Bold) }
+    ) { WeSeeText(label, if (primary) Color.White else WeSeeInk, 16, FontWeight.Bold) }
 }
 
 /** Botão claro usado dentro dos painéis azuis. */
@@ -34,10 +35,10 @@ fun AppButton(label: String, primary: Boolean, onClick: () -> Unit) {
 fun PanelButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(10.dp)
     Box(
-        modifier.fillMaxWidth().height(40.dp).clip(shape).background(WeSeeCard)
+        modifier.fillMaxWidth().height(40.dp).clip(shape).background(WeSeeSurface)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { WeSeeText(label, WeSeeBlue, 16, FontWeight.Bold) }
+    ) { WeSeeText(label, WeSeeInk, 16, FontWeight.Bold) }
 }
 
 /** "Não tem conta? Criar conta" — texto auxiliar com ação clicável. */

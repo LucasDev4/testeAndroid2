@@ -17,15 +17,17 @@ import com.wesee.app.network.UserType
 import com.wesee.app.network.VinculoItem
 import com.wesee.app.network.userMessage
 import kotlinx.coroutines.delay
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 /** "Atualizado há 5 min". A idade vem calculada pelo SERVIDOR (não depende do relógio do celular). */
 fun formatUpdatedAge(seconds: Long): String {
     val s = maxOf(0L, seconds)
     return when {
-        s < 60 -> "Atualizado há instantes"
-        s < 3600 -> "Atualizado há ${s / 60} min"
-        s < 86400 -> "Atualizado há ${s / 3600} h"
-        else -> "Atualizado há ${s / 86400} dia(s)"
+        s < 60 -> tr(R.string.age_moments)
+        s < 3600 -> tr(R.string.age_minutes, s / 60)
+        s < 86400 -> tr(R.string.age_hours, s / 3600)
+        else -> tr(R.string.age_days, s / 86400)
     }
 }
 
@@ -55,7 +57,7 @@ class GuardianTracking(private val userStore: UserStore) {
         val token = userStore.token
         if (token == null) {
             loading = false
-            notice = "Sua sessão expirou. Entre novamente."
+            notice = tr(R.string.session_expired_spoken)
             return
         }
         when (val r = AtlasApi.listarVinculos(token)) {
@@ -67,7 +69,7 @@ class GuardianTracking(private val userStore: UserStore) {
                     userStore.selectedPcdId = current.relacionadoId
                     notice = null
                 } else {
-                    notice = "Você ainda não tem nenhuma pessoa vinculada. Peça um código no app da pessoa."
+                    notice = tr(R.string.guardian_no_links_notice)
                 }
             }
             is ApiResult.Error -> notice = r.userMessage()
@@ -98,7 +100,7 @@ class GuardianTracking(private val userStore: UserStore) {
             is ApiResult.Success -> {
                 val loc = r.value
                 if (loc == null) {
-                    clearLocation("O aparelho de ${person.nome} ainda não enviou a localização.")
+                    clearLocation(tr(R.string.guardian_not_sent, person.nome))
                 } else {
                     location = loc
                     updatedLabel = formatUpdatedAge(loc.ageSeconds)
@@ -137,13 +139,13 @@ class GuardianTracking(private val userStore: UserStore) {
 
     /** O que os cards do Responsável exibem (os textos dizem o estado real; nada é inventado). */
     fun pessoa(): PessoaAcompanhada {
-        val nome = selected?.nome?.takeIf { it.isNotBlank() } ?: "Pessoa acompanhada"
+        val nome = selected?.nome?.takeIf { it.isNotBlank() } ?: tr(R.string.guardian_person_fallback)
         val l = location
         val endereco = when {
-            loading -> "Carregando..."
-            selected == null -> "Nenhuma pessoa vinculada"
-            l == null -> "Localização indisponível"
-            else -> address ?: if (addressFailed) "Endereço indisponível" else "Buscando endereço..."
+            loading -> tr(R.string.loading)
+            selected == null -> tr(R.string.guardian_none_linked)
+            l == null -> tr(R.string.guardian_location_unavailable)
+            else -> address ?: if (addressFailed) tr(R.string.address_failed) else tr(R.string.address_loading)
         }
         return PessoaAcompanhada(nome, endereco, if (l == null) "" else updatedLabel, l?.latLng?.latitude, l?.latLng?.longitude)
     }

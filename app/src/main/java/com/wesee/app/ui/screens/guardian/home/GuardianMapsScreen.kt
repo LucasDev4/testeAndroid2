@@ -26,7 +26,10 @@ import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.screens.guardian.components.*
 import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeeInk
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
 @Composable
 private fun LocationTitle() {
@@ -34,12 +37,12 @@ private fun LocationTitle() {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.shadow(6.dp, chip).clip(chip).background(Color(0xFF8FC9FF)).padding(horizontal = 10.dp, vertical = 2.dp)) {
-                WeSeeText("Localização", WeSeeBlue, 28, FontWeight.SemiBold)
+                WeSeeText(stringResource(R.string.guardian_title_1), Color(0xFF004789), 28, FontWeight.SemiBold)
             }
             Spacer(Modifier.width(8.dp))
-            WeSeeText("Atual", WeSeeBlue, 28, FontWeight.SemiBold)
+            WeSeeText(stringResource(R.string.guardian_title_2), WeSeeInk, 28, FontWeight.SemiBold)
         }
-        WeSeeText("do Menor", WeSeeBlue, 28, FontWeight.SemiBold)
+        WeSeeText(stringResource(R.string.guardian_title_3), WeSeeInk, 28, FontWeight.SemiBold)
     }
 }
 
@@ -81,9 +84,9 @@ fun GuardianMapsScreen(responsavelName: String, onOpenHome: () -> Unit = {}, onA
                     val lon = data.pessoa.longitude
                     val mapModifier = Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(mapHeight)
                     if (lat != null && lon != null) {
-                        GuardianMap(lat, lon, mapModifier, markerTitle = "Localização de ${data.pessoa.nome}")
+                        GuardianMap(lat, lon, mapModifier, markerTitle = stringResource(R.string.guardian_marker_of, data.pessoa.nome))
                     } else {
-                        GuardianMapPlaceholder(if (tracking.loading) "Carregando..." else "Sem localização para mostrar no mapa", mapModifier)
+                        GuardianMapPlaceholder(stringResource(if (tracking.loading) R.string.loading else R.string.guardian_no_location_map), mapModifier)
                     }
                 }
             }

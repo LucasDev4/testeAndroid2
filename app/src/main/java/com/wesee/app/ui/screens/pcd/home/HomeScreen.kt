@@ -34,8 +34,11 @@ import com.wesee.app.ui.screens.pcd.home.camera.FullscreenPlaceholder
 import com.wesee.app.ui.screens.pcd.home.camera.LiveCameraContent
 import com.wesee.app.ui.screens.pcd.home.camera.rememberCameraSession
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.WeSeePage
+import com.wesee.app.ui.theme.WeSeeSurface
 import com.wesee.app.ui.theme.WeSeeDeep
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
 private val HeaderShape = GenericShape { size, _ ->
     val w = size.width; val h = size.height
@@ -52,14 +55,14 @@ private fun HomeHeader(firstName: String, systemActive: Boolean) {
         Modifier.fillMaxWidth().clip(HeaderShape).background(Brush.verticalGradient(listOf(WeSeeDeep, WeSeeBlue)))
             .statusBarsPadding().padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 84.dp),
     ) {
-        Box(Modifier.size(34.dp).clip(CircleShape).background(WeSeeCard))
+        Box(Modifier.size(34.dp).clip(CircleShape).background(WeSeeSurface))
         Spacer(Modifier.height(26.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(7.dp).clip(CircleShape).background(if (systemActive) Color(0xFF00C853) else Color(0xFFE53935)))
             Spacer(Modifier.width(5.dp))
-            WeSeeText(if (systemActive) "Sistema ativo" else "Sistema desativado", Color.White, 10, FontWeight.SemiBold)
+            WeSeeText(stringResource(if (systemActive) R.string.system_active else R.string.system_inactive), Color.White, 10, FontWeight.SemiBold)
         }
-        WeSeeText("Olá $firstName.", Color.White, 38, FontWeight.SemiBold, textAlign = TextAlign.Start)
+        WeSeeText(stringResource(R.string.home_greeting, firstName), Color.White, 38, FontWeight.SemiBold, textAlign = TextAlign.Start)
     }
 }
 
@@ -84,11 +87,11 @@ fun PcdHomeScreen(firstName: String, onOpenChat: () -> Unit = {}) {
         street = address.address?.label,
         accuracyMeters = fix?.accuracyMeters?.roundToInt(),
         status = when {
-            !access.hasPermission -> "Toque para permitir a localização"
-            fix == null && !access.gpsEnabled -> "GPS desligado. Toque para ligar"
-            fix == null -> "Obtendo localização..."
-            address.failed -> "Endereço indisponível"
-            else -> "Buscando endereço..."
+            !access.hasPermission -> stringResource(R.string.loc_status_permission)
+            fix == null && !access.gpsEnabled -> stringResource(R.string.loc_status_gps_off)
+            fix == null -> stringResource(R.string.loc_status_getting)
+            address.failed -> stringResource(R.string.loc_status_address_failed)
+            else -> stringResource(R.string.loc_status_address_loading)
         },
     )
     val onLocationClick: (() -> Unit)? = when {
@@ -97,7 +100,7 @@ fun PcdHomeScreen(firstName: String, onOpenChat: () -> Unit = {}) {
         else -> null
     }
 
-    Box(Modifier.fillMaxSize().background(WeSeeCard)) {
+    Box(Modifier.fillMaxSize().background(WeSeePage)) {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 HomeHeader(firstName, systemActive)

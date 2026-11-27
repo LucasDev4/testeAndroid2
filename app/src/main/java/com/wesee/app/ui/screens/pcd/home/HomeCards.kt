@@ -36,11 +36,14 @@ import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.components.softCard
 import com.wesee.app.ui.theme.HostGrotesk
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeDeep
+import com.wesee.app.ui.theme.ThemedImage
 import com.wesee.app.ui.theme.WeSeeMid
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.settings.AppSettings
+import com.wesee.app.ui.theme.WeSeeInk
 
 /**
  * Dados do card de localização, todos opcionais: o que ainda não existe aparece como indisponível (nada é inventado).
@@ -50,6 +53,9 @@ import java.util.Locale
 data class LocationInfo(
     val street: String?, val accuracyMeters: Int?, val distanceKm: Float? = null, val steps: Int? = null, val status: String? = null,
 )
+
+/** Texto escuro fixo das anotações: o fundo delas é pastel em qualquer tema. */
+private val NoteInk = Color(0xFF002A55)
 
 @Composable
 private fun MetricBubble(text: String) {
@@ -68,17 +74,17 @@ fun LocationCard(info: LocationInfo, modifier: Modifier = Modifier, onClick: (()
     val clickable = if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier
     Row(modifier.fillMaxWidth().softCard().then(clickable).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            WeSeeText("Localização Atual:", WeSeeMid, 16, FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Start)
+            WeSeeText(stringResource(R.string.loc_current_title), WeSeeMid, 16, FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Start)
             Spacer(Modifier.height(8.dp))
-            WeSeeText(info.street ?: info.status ?: "Localização indisponível", WeSeeBlue, 21, FontWeight.Bold, Modifier.fillMaxWidth())
+            WeSeeText(info.street ?: info.status ?: stringResource(R.string.loc_unavailable), WeSeeInk, 21, FontWeight.Bold, Modifier.fillMaxWidth())
             if (info.accuracyMeters != null) {
-                WeSeeText("Precisão: ~ ${info.accuracyMeters} Metros", WeSeeMid, 10, FontWeight.SemiBold, Modifier.fillMaxWidth())
+                WeSeeText(stringResource(R.string.loc_accuracy, info.accuracyMeters), WeSeeMid, 10, FontWeight.SemiBold, Modifier.fillMaxWidth())
             }
         }
         Spacer(Modifier.width(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            MetricBubble(if (info.distanceKm != null) "${info.distanceKm}\nkm" else "--\nkm")
-            MetricBubble(if (info.steps != null) "${info.steps}\npassos" else "--\npassos")
+            MetricBubble((if (info.distanceKm != null) "${info.distanceKm}" else "--") + "\nkm")
+            MetricBubble((if (info.steps != null) "${info.steps}" else "--") + "\n" + stringResource(R.string.unit_steps))
         }
     }
 }
@@ -87,10 +93,10 @@ fun LocationCard(info: LocationInfo, modifier: Modifier = Modifier, onClick: (()
 fun BatteryCard(battery: BatteryState, modifier: Modifier = Modifier) {
     Column(modifier.softCard().padding(14.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            WeSeeText("Bateria", WeSeeBlue, 12, FontWeight.Bold)
+            WeSeeText(stringResource(R.string.battery_title), WeSeeInk, 12, FontWeight.Bold)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(painterResource(R.drawable.ic_battery), null, Modifier.width(26.dp))
-                WeSeeText("${battery.percent}%", WeSeeBlue, 9, FontWeight.Bold)
+                ThemedImage(painterResource(R.drawable.ic_battery), null, Modifier.width(26.dp))
+                WeSeeText("${battery.percent}%", WeSeeInk, 9, FontWeight.Bold)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -101,14 +107,16 @@ fun BatteryCard(battery: BatteryState, modifier: Modifier = Modifier) {
 /** Card "Anotações": toque para criar uma nova anotação. */
 @Composable
 fun NotesShortcutCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val date = remember { SimpleDateFormat("dd/MM/yy", Locale("pt", "BR")).format(Date()) }
+    val datePattern = stringResource(R.string.date_pattern_short)
+    val date = remember(datePattern) { SimpleDateFormat(datePattern, AppSettings.language.locale).format(Date()) }
+    val notesDesc = stringResource(R.string.notes_shortcut_desc)
     Column(
         modifier.softCard().clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "Anotações. Toque para criar uma nova anotação." }.padding(14.dp),
+            .semantics { contentDescription = notesDesc }.padding(14.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            WeSeeText("Anotações:", WeSeeBlue, 11, FontWeight.Bold)
-            WeSeeText(date, WeSeeBlue, 8, FontWeight.Bold)
+            WeSeeText(stringResource(R.string.notes_title), WeSeeInk, 11, FontWeight.Bold)
+            WeSeeText(date, WeSeeInk, 8, FontWeight.Bold)
         }
         Spacer(Modifier.height(10.dp))
         Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -126,7 +134,7 @@ private fun StickyNote(note: Note, rotation: Float) {
     ) {
         BasicText(
             note.toAnnotated(), Modifier.padding(10.dp),
-            style = TextStyle(color = WeSeeDeep, fontSize = 11.sp, lineHeight = 14.sp, fontFamily = HostGrotesk, fontWeight = FontWeight.Medium),
+            style = TextStyle(color = NoteInk, fontSize = 11.sp, lineHeight = 14.sp, fontFamily = HostGrotesk, fontWeight = FontWeight.Medium),
             maxLines = 8, overflow = TextOverflow.Ellipsis,
         )
     }
@@ -137,10 +145,10 @@ private fun StickyNote(note: Note, rotation: Float) {
 fun NotesMural(notes: List<Note>, modifier: Modifier = Modifier) {
     val tilts = listOf(-3f, 2f, -2f)
     Column(modifier.fillMaxWidth().softCard().padding(vertical = 14.dp)) {
-        WeSeeText("Mural de anotações", WeSeeBlue, 14, FontWeight.SemiBold, Modifier.padding(horizontal = 14.dp))
+        WeSeeText(stringResource(R.string.notes_mural_title), WeSeeInk, 14, FontWeight.SemiBold, Modifier.padding(horizontal = 14.dp))
         Spacer(Modifier.height(10.dp))
         if (notes.isEmpty()) {
-            WeSeeText("Nenhuma anotação ainda.", WeSeeMid, 12, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
+            WeSeeText(stringResource(R.string.notes_empty), WeSeeMid, 12, modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
         } else {
             LazyRow(
                 Modifier.fillMaxWidth().height(150.dp),

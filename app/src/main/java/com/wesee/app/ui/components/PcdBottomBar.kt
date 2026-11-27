@@ -17,6 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
 import com.wesee.app.ui.theme.WeSeeBlue
+import com.wesee.app.ui.theme.WeSeeAccent
+import com.wesee.app.ui.theme.WeSeeInactive
+import com.wesee.app.ui.theme.WeSeeBarBg
+import com.wesee.app.ui.theme.accentTint
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 
 enum class PcdTab { Home, Chat, Maps, Account }
 
@@ -27,20 +33,19 @@ data class PcdNav(
 )
 val LocalPcdNav = staticCompositionLocalOf { PcdNav() }
 
-private val Inactive = Color(0xFF7FB4F9)
-
 @Composable
 internal fun NavItem(label: String, icon: Int, selected: Boolean, onClick: (() -> Unit)?, modifier: Modifier) {
     Column(
-        modifier.fillMaxHeight().then(if (onClick != null) Modifier.clickable(role = Role.Tab, onClick = onClick) else Modifier),
+        modifier.fillMaxHeight().then(if (onClick != null) Modifier.clickable(role = Role.Tab, onClick = onClick) else Modifier)
+            .semantics { this.selected = selected },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (selected) Box(Modifier.width(28.dp).height(4.dp).background(WeSeeBlue, RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)))
+        if (selected) Box(Modifier.width(28.dp).height(4.dp).background(WeSeeAccent, RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)))
         else Spacer(Modifier.height(4.dp))
         Spacer(Modifier.height(9.dp))
-        Image(painterResource(icon), null, Modifier.size(22.dp))
+        Image(painterResource(icon), null, Modifier.size(22.dp), colorFilter = if (selected) accentTint() else null)
         Spacer(Modifier.height(3.dp))
-        WeSeeText(label, if (selected) WeSeeBlue else Inactive, 10, if (selected) FontWeight.Bold else FontWeight.SemiBold)
+        WeSeeText(label, if (selected) WeSeeAccent else WeSeeInactive, 10, if (selected) FontWeight.Bold else FontWeight.SemiBold)
     }
 }
 
@@ -50,7 +55,7 @@ fun PcdBottomBar(current: PcdTab, onHome: () -> Unit, onChat: () -> Unit) {
     val nav = LocalPcdNav.current
     val shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)
     Row(
-        Modifier.fillMaxWidth().shadow(10.dp, shape).background(Color.White, shape).navigationBarsPadding().height(62.dp),
+        Modifier.fillMaxWidth().shadow(10.dp, shape).background(WeSeeBarBg, shape).navigationBarsPadding().height(62.dp),
     ) {
         NavItem("Home", if (current == PcdTab.Home) R.drawable.nav_home_selected else R.drawable.nav_home,
             current == PcdTab.Home, onHome, Modifier.weight(1f))

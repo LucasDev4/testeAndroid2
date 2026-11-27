@@ -33,6 +33,11 @@ import com.wesee.app.maps.MapsApi
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.theme.WeSeeBlue
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
+import com.wesee.app.settings.tr
+import com.wesee.app.ui.theme.WeSeeSurface
+import com.wesee.app.ui.theme.WeSeeInk
 
 /** Mapa ilustrativo (fallback visual) usado enquanto não há chave do Google Maps. NÃO é um mapa real. */
 @Composable
@@ -71,7 +76,7 @@ private fun IllustrativeMap(modifier: Modifier = Modifier) {
 @Composable
 fun GuardianMap(
     latitude: Double, longitude: Double, modifier: Modifier = Modifier,
-    interactive: Boolean = true, markerTitle: String = "Localização", onClick: (() -> Unit)? = null,
+    interactive: Boolean = true, markerTitle: String = tr(R.string.map_marker_default), onClick: (() -> Unit)? = null,
 ) {
     val target = LatLng(latitude, longitude)
     val shape = RoundedCornerShape(22.dp)
@@ -99,24 +104,24 @@ fun GuardianMap(
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
                 )
             }
-            if (!loaded) Box(Modifier.fillMaxSize().background(Color(0xFFE9EAEC)), contentAlignment = Alignment.Center) {
-                WeSeeText("Carregando mapa...", WeSeeBlue, 11, FontWeight.SemiBold)
+            if (!loaded) Box(Modifier.fillMaxSize().background(WeSeeSurface), contentAlignment = Alignment.Center) {
+                WeSeeText(stringResource(R.string.map_loading), WeSeeInk, 11, FontWeight.SemiBold)
             }
         } else {
             IllustrativeMap(Modifier.fillMaxSize())
         }
         // aviso só quando o mapa NÃO é o real (a posição, quando existe, é a localização real da pessoa)
         val note = when {
-            MapsApi.isConfigured && failed -> "Mapa indisponível"
-            !MapsApi.isConfigured -> "Mapa ilustrativo · sem chave do Google Maps"
+            MapsApi.isConfigured && failed -> stringResource(R.string.map_unavailable)
+            !MapsApi.isConfigured -> stringResource(R.string.map_illustrative)
             else -> null
         }
         if (note != null) {
             Box(Modifier.align(Alignment.BottomStart).padding(8.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.85f))
-                .padding(horizontal = 8.dp, vertical = 3.dp)) { WeSeeText(note, WeSeeBlue, 7, FontWeight.SemiBold) }
+                .padding(horizontal = 8.dp, vertical = 3.dp)) { WeSeeText(note, Color(0xFF004789), 7, FontWeight.SemiBold) }
         }
         if (onClick != null) {
-            Box(Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = "Abrir localização", onClick = onClick))
+            Box(Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = stringResource(R.string.map_open_location), onClick = onClick))
         }
     }
 }

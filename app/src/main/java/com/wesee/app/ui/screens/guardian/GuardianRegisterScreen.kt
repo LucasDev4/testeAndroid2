@@ -22,6 +22,7 @@ import com.wesee.app.ui.components.*
 import com.wesee.app.ui.theme.WeSeeCard
 import com.wesee.app.ui.theme.WeSeeSoftText
 import kotlinx.coroutines.launch
+import com.wesee.app.settings.tr
 
 /** Tela 4 — Cadastro do responsável (/auth/register). Regras do backend: senha de 6 números, CPF 11, telefone 10–11 dígitos. */
 @Composable
@@ -44,12 +45,12 @@ fun GuardianRegisterScreen(
         val cpfDigits = cpf.filter { it.isDigit() }
         val phoneDigits = phone.filter { it.isDigit() }
         error = when {
-            name.isBlank() -> "Informe seu nome."
-            !email.contains("@") -> "Informe um e-mail válido."
-            !Regex("\\d{6}").matches(password) -> "A senha deve ter exatamente 6 números."
-            password != confirm -> "As senhas não são iguais."
-            cpfDigits.isNotEmpty() && cpfDigits.length != 11 -> "O CPF deve ter 11 números."
-            phoneDigits.isNotEmpty() && phoneDigits.length !in 10..11 -> "O telefone deve ter DDD + número (10 ou 11 dígitos)."
+            name.isBlank() -> tr(R.string.err_enter_name)
+            !email.contains("@") -> tr(R.string.err_invalid_email)
+            !Regex("\\d{6}").matches(password) -> tr(R.string.err_password_six)
+            password != confirm -> tr(R.string.err_passwords_differ)
+            cpfDigits.isNotEmpty() && cpfDigits.length != 11 -> tr(R.string.err_cpf_len)
+            phoneDigits.isNotEmpty() && phoneDigits.length !in 10..11 -> tr(R.string.err_phone_len)
             else -> null
         }
         if (error != null) return
@@ -59,8 +60,8 @@ fun GuardianRegisterScreen(
             when (val r = AtlasApi.register(body)) {
                 is ApiResult.Success -> onRegistered()
                 is ApiResult.Error -> error = when (r.code) {
-                    409 -> "Esse e-mail ou CPF já está cadastrado."
-                    -1 -> "Sem conexão com o servidor."
+                    409 -> tr(R.string.err_email_cpf_taken)
+                    -1 -> tr(R.string.err_no_connection_short)
                     else -> r.fields.values.firstOrNull() ?: r.message
                 }
             }
@@ -97,7 +98,7 @@ fun GuardianRegisterScreen(
                 WeSeeText(it, ErrorColor, 11, FontWeight.SemiBold, Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
             }
             Spacer(Modifier.height(12.dp))
-            PanelButton(if (loading) "Aguarde..." else stringResource(R.string.action_register), onClick = ::submit)
+            PanelButton(if (loading) stringResource(R.string.wait_message) else stringResource(R.string.action_register), onClick = ::submit)
             Spacer(Modifier.height(10.dp))
             AuthFooter(stringResource(R.string.has_account_prefix), stringResource(R.string.action_login_link), onGoToLogin)
         }

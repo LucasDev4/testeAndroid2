@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import com.wesee.app.network.AuthSession
 import java.io.File
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 /** Sessão + perfil local do usuário. Os dados de login vêm do backend (/auth/login). */
 class UserStore(context: Context) {
@@ -13,7 +15,7 @@ class UserStore(context: Context) {
     val tipo: String? get() = prefs.getString("tipo", null)
     val email: String get() = prefs.getString("email", "") ?: ""
     val name: String get() = prefs.getString("name", "") ?: ""
-    val firstName: String get() = name.trim().split(" ").firstOrNull().orEmpty().ifBlank { "usuário" }
+    val firstName: String get() = name.trim().split(" ").firstOrNull().orEmpty().ifBlank { tr(R.string.default_user_name) }
     /** Inicial usada no avatar quando não há foto. */
     val initial: String get() = name.trim().firstOrNull()?.uppercase() ?: "U"
     val isLoggedIn: Boolean get() = token != null

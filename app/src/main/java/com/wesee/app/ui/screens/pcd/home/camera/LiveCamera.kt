@@ -46,6 +46,9 @@ import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.voice.VoiceAssistant
 import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.ui.theme.ThemedImage
+import com.wesee.app.ui.theme.WeSeeInk
 
 /**
  * Voz + controlador da IA, criados UMA vez pela Home. Assim a câmera pode passar do card para a tela cheia (e voltar)
@@ -93,15 +96,15 @@ fun LiveCameraContent(
             Modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(painterResource(R.drawable.ic_camera), null, Modifier.size(42.dp))
+            ThemedImage(painterResource(R.drawable.ic_camera), null, Modifier.size(42.dp))
             Spacer(Modifier.height(10.dp))
-            WeSeeText("Permita o uso da câmera para o WeSee descrever o que está à sua frente.", WeSeeBlue, 12, FontWeight.SemiBold)
+            WeSeeText(stringResource(R.string.cam_permission_text), WeSeeInk, 12, FontWeight.SemiBold)
             Spacer(Modifier.height(12.dp))
             Box(
                 Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(50)).background(WeSeeBlue)
                     .clickable(role = Role.Button) { launcher.launch(Manifest.permission.CAMERA) }.padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center,
-            ) { WeSeeText("Permitir câmera", Color.White, 13, FontWeight.Bold) }
+            ) { WeSeeText(stringResource(R.string.cam_permission_button), Color.White, 13, FontWeight.Bold) }
         }
     }
 }
@@ -173,12 +176,13 @@ private fun CameraWithDetection(
 
     val insets = if (fullscreen) Modifier.windowInsetsPadding(WindowInsets.safeDrawing) else Modifier
 
-    Box(Modifier.fillMaxSize().semantics { contentDescription = "Câmera do WeSee. A IA descreve por voz o que está à sua frente." }) {
+    val camDescription = stringResource(R.string.cam_desc)
+    Box(Modifier.fillMaxSize().semantics { contentDescription = camDescription }) {
         AndroidView({ previewView }, Modifier.fillMaxSize())
 
         if (!fullscreen) {
             Box(
-                Modifier.matchParentSize().clickable(onClickLabel = "Mostrar o botão de tela cheia") { controlsVisible = !controlsVisible },
+                Modifier.matchParentSize().clickable(onClickLabel = stringResource(R.string.cam_show_fullscreen_label)) { controlsVisible = !controlsVisible },
             )
         }
 
@@ -193,7 +197,7 @@ private fun CameraWithDetection(
         Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Color(0xB300172B))) {
             Box(Modifier.then(if (fullscreen) Modifier.windowInsetsPadding(WindowInsets.safeDrawing) else Modifier).padding(horizontal = 14.dp, vertical = 10.dp)) {
                 WeSeeText(
-                    controller.caption ?: "Aponte a câmera para o caminho à sua frente.",
+                    controller.caption ?: stringResource(R.string.cam_hint),
                     Color.White, if (fullscreen) 15 else 12, FontWeight.SemiBold, Modifier.fillMaxWidth(),
                 )
             }
@@ -201,12 +205,12 @@ private fun CameraWithDetection(
 
         if (fullscreen) {
             PillButton(
-                "Sair da tela cheia", R.drawable.ic_fullscreen_exit, "Sair do modo de tela cheia da câmera", onExit,
+                stringResource(R.string.cam_exit_fullscreen), R.drawable.ic_fullscreen_exit, stringResource(R.string.cam_exit_fullscreen_desc), onExit,
                 Modifier.align(Alignment.TopEnd).then(insets).padding(10.dp),
             )
         } else if (controlsVisible) {
             PillButton(
-                "Tela cheia", R.drawable.ic_fullscreen, "Expandir a câmera para tela cheia", onExpand,
+                stringResource(R.string.cam_fullscreen), R.drawable.ic_fullscreen, stringResource(R.string.cam_fullscreen_desc), onExpand,
                 Modifier.align(Alignment.TopEnd).padding(10.dp),
             )
         }
@@ -249,6 +253,6 @@ fun FullscreenCamera(session: CameraSession, onExit: () -> Unit, onActiveChange:
 @Composable
 fun FullscreenPlaceholder() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        WeSeeText("Câmera em tela cheia", WeSeeBlue, 13, FontWeight.SemiBold)
+        WeSeeText(stringResource(R.string.cam_in_fullscreen), WeSeeInk, 13, FontWeight.SemiBold)
     }
 }

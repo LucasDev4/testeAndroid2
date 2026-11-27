@@ -27,17 +27,23 @@ import com.wesee.app.data.Notificacao
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.ui.theme.WeSeeDeep
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
+import com.wesee.app.ui.theme.WeSeePanel
+import com.wesee.app.ui.theme.WeSeeInk
+import com.wesee.app.ui.theme.WeSeeInkDeep
 
 /** Painel lateral (entra pela direita) sobre a tela, com camada escurecida. Fica acima da barra de navegação. */
 @Composable
 fun NotificationsPanelOverlay(visible: Boolean, items: List<Notificacao>, onDismiss: () -> Unit) {
+    val closeDesc = stringResource(R.string.close_notifications)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val panelWidth = (maxWidth * 0.4f).coerceAtLeast(150.dp)
         AnimatedVisibility(visible, enter = fadeIn(tween(220)), exit = fadeOut(tween(200))) {
             Box(
                 Modifier.fillMaxSize().background(Color(0x8C5B6B7D))
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss)
-                    .semantics { contentDescription = "Fechar notificações" },
+                    .semantics { contentDescription = closeDesc },
             )
         }
         AnimatedVisibility(
@@ -46,11 +52,11 @@ fun NotificationsPanelOverlay(visible: Boolean, items: List<Notificacao>, onDism
         ) {
             Column(
                 Modifier.width(panelWidth).fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)).background(Color(0xFFE6EFF9))
+                    .clip(RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)).background(WeSeePanel)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                     .statusBarsPadding().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 24.dp),
             ) {
-                WeSeeText("Notificações", WeSeeBlue, 18, FontWeight.Bold, Modifier.fillMaxWidth())
+                WeSeeText(stringResource(R.string.notifications_desc), WeSeeInk, 18, FontWeight.Bold, Modifier.fillMaxWidth())
                 Spacer(Modifier.height(12.dp))
                 Box(Modifier.fillMaxWidth().height(1.dp).background(WeSeeBlue))
                 Spacer(Modifier.height(14.dp))
@@ -59,7 +65,7 @@ fun NotificationsPanelOverlay(visible: Boolean, items: List<Notificacao>, onDism
                         Row(verticalAlignment = Alignment.Top) {
                             Box(Modifier.padding(top = 4.dp).size(6.dp).clip(CircleShape).background(AlertRed))
                             Spacer(Modifier.width(6.dp))
-                            WeSeeText(n.mensagem, WeSeeDeep, 10, FontWeight.SemiBold, Modifier.weight(1f), textAlign = TextAlign.Start)
+                            WeSeeText(n.mensagem, WeSeeInkDeep, 10, FontWeight.SemiBold, Modifier.weight(1f), textAlign = TextAlign.Start)
                         }
                     }
                 }

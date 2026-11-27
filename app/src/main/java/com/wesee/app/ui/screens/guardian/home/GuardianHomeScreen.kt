@@ -18,6 +18,8 @@ import com.wesee.app.ui.screens.guardian.GuardianTracking
 import com.wesee.app.ui.screens.guardian.TrackingEffects
 import com.wesee.app.ui.screens.guardian.components.*
 import com.wesee.app.ui.theme.WeSeeCard
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
 /**
  * Home do Responsável. A pessoa acompanhada e a LOCALIZAÇÃO são reais (vínculos + backend); status, alertas e
@@ -58,7 +60,7 @@ fun GuardianHomeScreen(responsavelName: String, onOpenMaps: () -> Unit = {}, onA
                     MapThumbnail(lat, lon, onClick = onOpenMaps)
                 } else {
                     GuardianMapPlaceholder(
-                        if (tracking.loading) "Carregando..." else "Sem localização para mostrar no mapa",
+                        stringResource(if (tracking.loading) R.string.loading else R.string.guardian_no_location_map),
                         Modifier.padding(horizontal = 18.dp).fillMaxWidth().height(110.dp),
                     )
                 }

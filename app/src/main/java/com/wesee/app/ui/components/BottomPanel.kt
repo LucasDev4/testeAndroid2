@@ -14,7 +14,7 @@ import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.ui.theme.WeSeeDeep
 
 val SheetShape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
-val SheetBrush = Brush.verticalGradient(listOf(WeSeeBlue, WeSeeDeep))
+val SheetBrush: Brush get() = Brush.verticalGradient(listOf(WeSeeBlue, WeSeeDeep))
 
 /** Painel azul inferior (bottom sheet) com rolagem para telas pequenas / teclado aberto. */
 @Composable

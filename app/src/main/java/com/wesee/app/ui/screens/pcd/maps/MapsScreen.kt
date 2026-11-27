@@ -61,12 +61,17 @@ import com.wesee.app.ui.theme.WeSeeBlue
 import com.wesee.app.ui.theme.WeSeeCard
 import com.wesee.app.ui.theme.WeSeeMid
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.network.localizedInstruction
+import com.wesee.app.ui.theme.ThemedImage
+import com.wesee.app.ui.theme.WeSeeInk
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 private val ButtonText = Color.White.copy(alpha = 0.6f)
 private val RouteColor = Color(0xFF7FB4F9)
 /** Rota que NÃO é de pedestre (servidor sem perfil de caminhada confirmado): cor de alerta, nunca a cor da rota a pé. */
 private val NonWalkingColor = Color(0xFFE53935)
-private const val OsmAttribution = "Dados © colaboradores do OpenStreetMap"
 
 @Composable
 private fun PillButton(label: String, icon: Int, iconWidth: Int, onClick: () -> Unit = {}) {
@@ -85,36 +90,37 @@ private fun PillButton(label: String, icon: Int, iconWidth: Int, onClick: () -> 
 private fun SearchCard(
     query: String, searching: Boolean, onQuery: (String) -> Unit, onClear: () -> Unit, onSearch: () -> Unit,
 ) {
-    val textStyle = TextStyle(color = WeSeeBlue, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = HostGrotesk)
+    val clearDesc = stringResource(R.string.action_clear)
+    val textStyle = TextStyle(color = WeSeeInk, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = HostGrotesk)
     Row(Modifier.fillMaxWidth().softCard(24.dp).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(painterResource(R.drawable.ic_pin_add), null, Modifier.height(15.dp))
+            ThemedImage(painterResource(R.drawable.ic_pin_add), null, Modifier.height(15.dp))
             Box(Modifier.width(1.dp).height(18.dp).background(WeSeeMid))
-            Image(painterResource(R.drawable.ic_pin_add), null, Modifier.height(15.dp))
+            ThemedImage(painterResource(R.drawable.ic_pin_add), null, Modifier.height(15.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Box(Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.CenterStart) {
-                WeSeeText("Sua localização", WeSeeMid, 12, FontWeight.SemiBold, textAlign = TextAlign.Start)
+                WeSeeText(stringResource(R.string.maps_your_location), WeSeeMid, 12, FontWeight.SemiBold, textAlign = TextAlign.Start)
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(WeSeeMid.copy(alpha = 0.5f)))
             Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
                 BasicTextField(
                     value = query, onValueChange = onQuery, singleLine = true,
-                    textStyle = textStyle, cursorBrush = SolidColor(WeSeeBlue),
+                    textStyle = textStyle, cursorBrush = SolidColor(WeSeeInk),
                     // a pesquisa só acontece quando o usuário CONFIRMA (tecla buscar ou botão): nunca a cada tecla
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                     modifier = Modifier.weight(1f),
                     decorationBox = { inner ->
                         Box(contentAlignment = Alignment.CenterStart) {
-                            if (query.isEmpty()) BasicText("Destino", style = textStyle.copy(color = WeSeeBlue.copy(alpha = 0.7f)))
+                            if (query.isEmpty()) BasicText(stringResource(R.string.maps_destination_hint), style = textStyle.copy(color = WeSeeInk.copy(alpha = 0.7f)))
                             inner()
                         }
                     },
                 )
                 if (query.isNotEmpty()) {
-                    Box(Modifier.size(34.dp).clickable(role = Role.Button, onClick = onClear), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(34.dp).clickable(role = Role.Button, onClick = onClear).semantics { contentDescription = clearDesc }, contentAlignment = Alignment.Center) {
                         WeSeeText("✕", WeSeeMid, 14, FontWeight.Bold)
                     }
                 }
@@ -122,7 +128,7 @@ private fun SearchCard(
                     Modifier.clip(RoundedCornerShape(50)).background(WeSeeBlue)
                         .clickable(enabled = !searching, role = Role.Button, onClick = onSearch)
                         .padding(horizontal = 12.dp, vertical = 6.dp),
-                ) { WeSeeText(if (searching) "Buscando..." else "Buscar", ButtonText, 11, FontWeight.SemiBold) }
+                ) { WeSeeText(stringResource(if (searching) R.string.maps_searching else R.string.maps_search), ButtonText, 11, FontWeight.SemiBold) }
             }
         }
     }
@@ -133,7 +139,7 @@ private fun PlaceList(items: List<GeoPlace>, onPick: (GeoPlace) -> Unit) {
     Column(Modifier.fillMaxWidth().softCard(18.dp)) {
         items.take(8).forEach { p ->
             Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { onPick(p) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                WeSeeText(p.title, WeSeeBlue, 13, FontWeight.Bold, textAlign = TextAlign.Start)
+                WeSeeText(p.title, WeSeeInk, 13, FontWeight.Bold, textAlign = TextAlign.Start)
                 if (p.subtitle.isNotBlank()) WeSeeText(p.subtitle, WeSeeMid, 10, textAlign = TextAlign.Start)
             }
         }
@@ -144,7 +150,7 @@ private fun PlaceList(items: List<GeoPlace>, onPick: (GeoPlace) -> Unit) {
 @Composable
 private fun NoticeCard(text: String, actionLabel: String? = null, onAction: () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().softCard(18.dp).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        WeSeeText(text, WeSeeBlue, 11, FontWeight.SemiBold, Modifier.weight(1f), textAlign = TextAlign.Start)
+        WeSeeText(text, WeSeeInk, 11, FontWeight.SemiBold, Modifier.weight(1f), textAlign = TextAlign.Start)
         if (actionLabel != null) {
             Spacer(Modifier.width(8.dp))
             Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeBlue).clickable(role = Role.Button, onClick = onAction)
@@ -156,15 +162,15 @@ private fun NoticeCard(text: String, actionLabel: String? = null, onAction: () -
 /** Etapas da rota. Só entram trechos com instrução OU nome de via: nada é inventado quando o OSRM não deu informação. */
 @Composable
 private fun StepsPanel(steps: List<RouteStepInfo>) {
-    val shown = steps.filter { !it.instruction.isNullOrBlank() || !it.streetName.isNullOrBlank() }
+    val shown = steps.filter { localizedInstruction(it) != null || !it.streetName.isNullOrBlank() }
     if (shown.isEmpty()) return
     Column(
         Modifier.fillMaxWidth().heightIn(max = 170.dp).softCard(18.dp).verticalScroll(rememberScrollState())
             .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         shown.forEach { s ->
-            val text = (s.instruction ?: s.streetName.orEmpty()) + if (s.distanceMeters > 0) " · ${formatDistance(s.distanceMeters)}" else ""
-            WeSeeText(text, WeSeeBlue, 11, FontWeight.SemiBold, Modifier.fillMaxWidth().padding(vertical = 4.dp), textAlign = TextAlign.Start)
+            val text = (localizedInstruction(s) ?: s.streetName.orEmpty()) + if (s.distanceMeters > 0) " · ${formatDistance(s.distanceMeters)}" else ""
+            WeSeeText(text, WeSeeInk, 11, FontWeight.SemiBold, Modifier.fillMaxWidth().padding(vertical = 4.dp), textAlign = TextAlign.Start)
         }
     }
 }
@@ -241,12 +247,12 @@ fun PcdMapsScreen() {
                 }
                 state.searchMessage?.let { NoticeCard(it) }
                 when {
-                    !access.hasPermission -> NoticeCard("Ative a localização para ver sua posição no mapa.", "Permitir", access.requestPermission)
-                    !access.gpsEnabled -> NoticeCard("O GPS está desligado. Ligue a localização do aparelho.", "Ajustes", access.openGpsSettings)
-                    user == null -> NoticeCard("Obtendo sua localização...")
+                    !access.hasPermission -> NoticeCard(stringResource(R.string.maps_enable_location), stringResource(R.string.maps_allow), access.requestPermission)
+                    !access.gpsEnabled -> NoticeCard(stringResource(R.string.maps_gps_off), stringResource(R.string.maps_settings), access.openGpsSettings)
+                    user == null -> NoticeCard(stringResource(R.string.maps_getting_location))
                 }
                 if (!MapsApi.isConfigured) {
-                    NoticeCard("Chave do Google Maps não configurada (MAPS_API_KEY).")
+                    NoticeCard(stringResource(R.string.maps_no_key))
                 }
             }
 
@@ -262,20 +268,20 @@ fun PcdMapsScreen() {
                     Spacer(Modifier.height(8.dp))
                 }
                 Row(verticalAlignment = Alignment.Top) {
-                    WeSeeText(state.destination?.title ?: "Selecione um destino", WeSeeBlue, 24, FontWeight.Bold, Modifier.weight(1f),
+                    WeSeeText(state.destination?.title ?: stringResource(R.string.maps_select_destination), WeSeeInk, 24, FontWeight.Bold, Modifier.weight(1f),
                         lineHeight = 28, textAlign = TextAlign.Start)
                     if (r != null) {
                         Spacer(Modifier.width(10.dp))
                         Column(horizontalAlignment = Alignment.End) {
-                            WeSeeText(formatDistance(r.distanceMeters), WeSeeBlue, 22, FontWeight.Bold)
+                            WeSeeText(formatDistance(r.distanceMeters), WeSeeInk, 22, FontWeight.Bold)
                             WeSeeText(formatDuration(r.durationSeconds), WeSeeMid, 12, FontWeight.SemiBold)
                         }
                     } else if (state.routing) {
-                        WeSeeText("Calculando...", WeSeeMid, 12, FontWeight.SemiBold)
+                        WeSeeText(stringResource(R.string.maps_calculating), WeSeeMid, 12, FontWeight.SemiBold)
                     }
                 }
-                r?.warning?.let {
-                    WeSeeText(it, NonWalkingColor, 10, FontWeight.Bold, Modifier.padding(top = 4.dp), textAlign = TextAlign.Start)
+                if (r?.warning != null) {
+                    WeSeeText(stringResource(R.string.route_non_walking_warning), NonWalkingColor, 10, FontWeight.Bold, Modifier.padding(top = 4.dp), textAlign = TextAlign.Start)
                 }
                 state.routeError?.let { err ->
                     Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -284,30 +290,30 @@ fun PcdMapsScreen() {
                             Spacer(Modifier.width(8.dp))
                             Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeBlue)
                                 .clickable(role = Role.Button) { scope.launch { state.calculateRoute(user) } }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)) { WeSeeText("Tentar de novo", ButtonText, 10, FontWeight.SemiBold) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)) { WeSeeText(stringResource(R.string.maps_try_again), ButtonText, 10, FontWeight.SemiBold) }
                         }
                     }
                 }
                 if (state.destination != null && user == null && r == null && state.routeError == null) {
-                    WeSeeText("Aguardando sua localização para calcular a rota...", WeSeeMid, 10, textAlign = TextAlign.Start,
+                    WeSeeText(stringResource(R.string.maps_waiting_location), WeSeeMid, 10, textAlign = TextAlign.Start,
                         modifier = Modifier.padding(top = 4.dp))
                 }
-                r?.safetyNotice?.let {
-                    WeSeeText(it, WeSeeMid, 9, textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
+                if (r?.safetyNotice != null) {
+                    WeSeeText(stringResource(R.string.route_safety_notice), WeSeeMid, 9, textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
                 }
-                WeSeeText(r?.attribution?.takeIf { it.isNotBlank() } ?: OsmAttribution, WeSeeMid, 8, textAlign = TextAlign.Start,
+                WeSeeText(stringResource(R.string.maps_attribution), WeSeeMid, 8, textAlign = TextAlign.Start,
                     modifier = Modifier.padding(top = 4.dp))
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    PillButton("Direção", R.drawable.ic_direction, 15) { if (r != null && r.steps.isNotEmpty()) showSteps = !showSteps }
+                    PillButton(stringResource(R.string.maps_directions), R.drawable.ic_direction, 15) { if (r != null && r.steps.isNotEmpty()) showSteps = !showSteps }
                     Spacer(Modifier.width(10.dp))
-                    PillButton("Rotas", R.drawable.ic_arrow_left, 16)
+                    PillButton(stringResource(R.string.maps_routes), R.drawable.ic_arrow_left, 16)
                     Spacer(Modifier.weight(1f))
                     Box(
                         Modifier.size(78.dp).shadow(8.dp, CircleShape).clip(CircleShape).background(WeSeeBlue)
                             .clickable(role = Role.Button) { /* FUTURO: iniciar navegação */ },
                         contentAlignment = Alignment.Center,
-                    ) { Image(painterResource(R.drawable.ic_turn_right), "Iniciar navegação", Modifier.size(40.dp)) }
+                    ) { Image(painterResource(R.drawable.ic_turn_right), stringResource(R.string.maps_start_navigation), Modifier.size(40.dp)) }
                 }
             }
         }

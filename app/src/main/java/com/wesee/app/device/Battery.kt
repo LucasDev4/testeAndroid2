@@ -9,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import kotlin.math.roundToInt
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 data class BatteryState(val percent: Int, val charging: Boolean)
 
@@ -17,11 +19,11 @@ const val DRAIN_PERCENT_PER_HOUR = 16f
 
 /** tempo_estimado = bateria_atual / consumo_medio_por_hora */
 fun BatteryState.remainingLabel(): String {
-    if (charging) return "Carregando..."
+    if (charging) return tr(R.string.battery_charging)
     val hours = percent / DRAIN_PERCENT_PER_HOUR
-    if (hours < 1f) return "~ ${(hours * 60).roundToInt()} min restantes"
+    if (hours < 1f) return tr(R.string.battery_minutes_left, (hours * 60).roundToInt())
     val h = hours.roundToInt()
-    return "~ $h ${if (h == 1) "Hora" else "Horas"} restantes"
+    return tr(if (h == 1) R.string.battery_hours_left_one else R.string.battery_hours_left_many, h)
 }
 
 private fun read(intent: Intent?): BatteryState {

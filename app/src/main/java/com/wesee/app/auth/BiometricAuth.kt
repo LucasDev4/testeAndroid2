@@ -8,6 +8,8 @@ import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 private tailrec fun Context.findActivity(): FragmentActivity? = when (this) {
     is FragmentActivity -> this
@@ -17,10 +19,10 @@ private tailrec fun Context.findActivity(): FragmentActivity? = when (this) {
 
 /** Autentica com a biometria do aparelho, se disponível. */
 fun authenticateWithBiometrics(context: Context, onSuccess: () -> Unit, onUnavailable: (String) -> Unit) {
-    val activity = context.findActivity() ?: return onUnavailable("Biometria indisponível.")
+    val activity = context.findActivity() ?: return onUnavailable(tr(R.string.bio_unavailable))
     val allowed = BIOMETRIC_STRONG or BIOMETRIC_WEAK
     if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
-        return onUnavailable("Biometria indisponível ou não cadastrada neste aparelho.")
+        return onUnavailable(tr(R.string.bio_unavailable_enroll))
     }
     val prompt = BiometricPrompt(activity, ContextCompat.getMainExecutor(activity),
         object : BiometricPrompt.AuthenticationCallback() {
@@ -28,9 +30,9 @@ fun authenticateWithBiometrics(context: Context, onSuccess: () -> Unit, onUnavai
         })
     prompt.authenticate(
         BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Login com biometria")
+            .setTitle(tr(R.string.voice_biometric_login))
             .setAllowedAuthenticators(allowed)
-            .setNegativeButtonText("Cancelar")
+            .setNegativeButtonText(tr(R.string.action_cancel))
             .build(),
     )
 }

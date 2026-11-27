@@ -13,8 +13,10 @@ import com.wesee.app.ui.components.LocalPcdNav
 import com.wesee.app.ui.components.PcdBottomBar
 import com.wesee.app.ui.components.PcdTab
 import com.wesee.app.ui.screens.profile.ProfileContent
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.R
 
-/** Perfil do PCD visual (usa a tela compartilhada [ProfileContent]). Apenas foto e Logout têm ação. */
+/** Perfil do PCD visual (usa a tela compartilhada [ProfileContent]): foto, vínculos, configurações e Logout. */
 @Composable
 fun PcdProfileScreen(userStore: UserStore, onBack: () -> Unit, onLogout: () -> Unit) {
     val context = LocalContext.current
@@ -31,10 +33,10 @@ fun PcdProfileScreen(userStore: UserStore, onBack: () -> Unit, onLogout: () -> U
 
     ProfileContent(
         userStore = userStore,
-        locationText = place ?: "Localização não disponível",
-        relationText = "Responsável não definido ainda...",
+        locationText = place ?: stringResource(R.string.profile_location_unavailable),
+        relationText = stringResource(R.string.profile_guardian_undefined),
         onBack = onBack, onLogout = onLogout,
-        linksOption = LinksOption("Meus responsáveis") { links.open() },
+        linksOption = LinksOption(stringResource(R.string.opt_my_guardians)) { links.open() },
         overlay = { LinksModal(links) },
     ) { PcdBottomBar(PcdTab.Account, onHome = nav.onHome, onChat = nav.onChat) }
 }

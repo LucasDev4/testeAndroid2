@@ -9,6 +9,8 @@ import com.wesee.app.network.AtlasApi
 import com.wesee.app.network.GeoPlace
 import com.wesee.app.network.RouteData
 import com.wesee.app.network.userMessage
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 /**
  * Estado e lógica da tela de Mapas do PCD (pesquisa de destino + rota), fora do composable.
@@ -33,12 +35,12 @@ class MapsState(private val tokenProvider: () -> String?) {
         val text = query.trim()
         if (text.length < 3) {
             results = emptyList()
-            searchMessage = "Digite pelo menos 3 letras e toque em Buscar."
+            searchMessage = tr(R.string.maps_search_too_short)
             return
         }
         val token = tokenProvider()
         if (token == null) {
-            searchMessage = "Sua sessão expirou. Entre novamente."
+            searchMessage = tr(R.string.session_expired_spoken)
             return
         }
         val generation = ++searchGeneration
@@ -51,7 +53,7 @@ class MapsState(private val tokenProvider: () -> String?) {
         when (r) {
             is ApiResult.Success -> {
                 results = r.value.places
-                if (r.value.places.isEmpty()) searchMessage = "Nenhum local encontrado para \"$text\"."
+                if (r.value.places.isEmpty()) searchMessage = tr(R.string.maps_no_results, text)
             }
             is ApiResult.Error -> searchMessage = r.userMessage()
         }
@@ -75,7 +77,7 @@ class MapsState(private val tokenProvider: () -> String?) {
         val token = tokenProvider()
         if (token == null) {
             route = null
-            routeError = "Sua sessão expirou. Entre novamente."
+            routeError = tr(R.string.session_expired_spoken)
             return
         }
         val generation = ++routeGeneration

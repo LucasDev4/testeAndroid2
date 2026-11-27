@@ -17,6 +17,8 @@ import java.net.URLEncoder
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
+import com.wesee.app.R
+import com.wesee.app.settings.tr
 
 object UserType {
     const val PCD_VISUAL = "PCD_VISUAL"
@@ -71,13 +73,13 @@ object AtlasApi {
                 if (resp.isSuccessful) ApiResult.Success(obj) else {
                     val f = obj.optJSONObject("fields")
                     val fields = f?.let { o -> o.keys().asSequence().associateWith { k -> o.optString(k) } } ?: emptyMap()
-                    ApiResult.Error(resp.code, obj.optString("message").ifBlank { "Erro ${resp.code}" }, fields)
+                    ApiResult.Error(resp.code, obj.optString("message").ifBlank { tr(R.string.err_http_code, resp.code) }, fields)
                 }
             }
         } catch (e: IOException) {
-            ApiResult.Error(-1, "Sem conexão com o servidor (${BuildConfig.API_BASE_URL}).")
+            ApiResult.Error(-1, tr(R.string.err_no_connection_url, BuildConfig.API_BASE_URL))
         } catch (e: IllegalArgumentException) {
-            ApiResult.Error(-1, "Endereço do servidor inválido (API_BASE_URL).")
+            ApiResult.Error(-1, tr(R.string.err_invalid_server_url))
         }
     }
 
@@ -149,7 +151,7 @@ object AtlasApi {
 
     /** Resposta cujo JSON veio fora do contrato (campo ausente...) vira erro tratável em vez de travar o app. */
     private inline fun <T> parsing(block: () -> T): ApiResult<T> =
-        try { ApiResult.Success(block()) } catch (e: JSONException) { ApiResult.Error(-2, "O servidor enviou uma resposta inesperada.") }
+        try { ApiResult.Success(block()) } catch (e: JSONException) { ApiResult.Error(-2, tr(R.string.err_unexpected_response)) }
 
     private fun coord(v: Double): String = String.format(Locale.US, "%.6f", v)
 
@@ -202,7 +204,7 @@ object AtlasApi {
         val stepsArr = o.optJSONArray("steps")
         val steps = if (stepsArr == null) emptyList() else (0 until stepsArr.length()).map { i ->
             val s = stepsArr.getJSONObject(i)
-            RouteStepInfo(s.str("instruction"), s.str("streetName"), s.optDouble("distanceMeters", 0.0).roundToInt(), s.optJSONObject("location")?.let { parsePoint(it) })
+            RouteStepInfo(s.str("instruction"), s.str("streetName"), s.optDouble("distanceMeters", 0.0).roundToInt(), s.optJSONObject("location")?.let { parsePoint(it) }, s.str("maneuverType"), s.str("maneuverModifier"))
         }
         return RouteData(
             points, o.getDouble("distanceMeters").roundToInt(), o.getDouble("durationSeconds").roundToInt(), steps,
@@ -264,8 +266,8 @@ object AtlasApi {
 
 /** Mensagem curta para a tela. Sem conexão (code -1) vira texto genérico; as demais já vêm em português do backend. */
 fun ApiResult.Error.userMessage(): String =
-    if (code == -1) "Sem conexão com o servidor. Verifique a internet e tente novamente." else message
+    if (code == -1) tr(R.string.err_no_connection_retry) else message
 
 /** Frase falada quando o servidor não respondeu. No build debug inclui o endereço usado, para facilitar o diagnóstico. */
 fun ApiResult.Error.spokenFailure(): String =
-    (if (BuildConfig.DEBUG) message else "Não consegui falar com o servidor.") + " Toque no botão para tentar de novo."
+    (if (BuildConfig.DEBUG) message else tr(R.string.err_server_spoken)) + " " + tr(R.string.err_tap_retry)

@@ -26,7 +26,9 @@ data class AddressInfo(val shortAddress: String?, val displayName: String?, val 
 }
 
 /** [instruction] é a tradução da manobra feita pelo backend; null quando o OSRM não deu informação suficiente. */
-data class RouteStepInfo(val instruction: String?, val streetName: String?, val distanceMeters: Int, val location: LatLng?)
+data class RouteStepInfo(val instruction: String?, val streetName: String?, val distanceMeters: Int, val location: LatLng?,
+    val maneuverType: String? = null, val maneuverModifier: String? = null,
+)
 
 /**
  * Rota calculada. [walking] = false significa que o servidor NÃO está confirmado como pedestre: a tela deve mostrar

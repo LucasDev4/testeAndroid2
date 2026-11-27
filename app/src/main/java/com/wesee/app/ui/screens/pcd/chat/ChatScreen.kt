@@ -53,13 +53,19 @@ import com.wesee.app.ui.components.PcdTab
 import com.wesee.app.ui.components.WeSeeText
 import com.wesee.app.ui.theme.IstokWeb
 import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
-import com.wesee.app.ui.theme.WeSeeDeep
+import com.wesee.app.ui.theme.WeSeeField
+import com.wesee.app.ui.theme.WeSeeInkDeep
+import com.wesee.app.ui.theme.WeSeePage
+import com.wesee.app.ui.theme.WeSeeSurface
 import com.wesee.app.ui.theme.WeSeeMid
 import com.wesee.app.voice.VoiceAssistant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.settings.tr
+import com.wesee.app.ui.theme.WeSeeInk
+import com.wesee.app.ui.theme.glowScale
 
 /**
  * Estado da conversa (100% local: sem IA, sem rede). Tocar numa sugestão adiciona a pergunta e, após uma
@@ -78,7 +84,7 @@ class NaviChatState(private val scope: CoroutineScope, private val onReply: (Str
     fun onSuggestion(suggestion: ChatSuggestion) {
         if (replying) return
         replying = true
-        messages.add(ChatMessage(nextId++, suggestion.title, fromUser = true))
+        messages.add(ChatMessage(nextId++, tr(suggestion.titleRes), fromUser = true))
         scope.launch {
             delay(650)
             val reply = rotator.next(suggestion)
@@ -98,10 +104,10 @@ class NaviChatState(private val scope: CoroutineScope, private val onReply: (Str
 private fun Glow() {
     Canvas(Modifier.fillMaxSize()) {
         val a = Offset(size.width, size.height * 0.03f)
-        drawCircle(Brush.radialGradient(listOf(Color(0xFF5E9BD6).copy(alpha = 0.75f), Color.Transparent), a, size.width * 0.45f),
+        drawCircle(Brush.radialGradient(listOf(Color(0xFF5E9BD6).copy(alpha = 0.75f * glowScale()), Color.Transparent), a, size.width * 0.45f),
             radius = size.width * 0.45f, center = a)
         val b = Offset(0f, size.height * 0.62f)
-        drawCircle(Brush.radialGradient(listOf(Color(0xFF6FA8E8).copy(alpha = 0.40f), Color.Transparent), b, size.width * 0.35f),
+        drawCircle(Brush.radialGradient(listOf(Color(0xFF6FA8E8).copy(alpha = 0.40f * glowScale()), Color.Transparent), b, size.width * 0.35f),
             radius = size.width * 0.35f, center = b)
     }
 }
@@ -111,21 +117,22 @@ private fun Glow() {
 private fun NaviHeader() {
     Column(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 14.dp)) {
         Image(painterResource(R.drawable.wesee_eyes_chat), null, Modifier.width(100.dp))
-        WeSeeText("Navi", WeSeeBlue, 48, FontWeight.Bold, textAlign = TextAlign.Start, fontFamily = IstokWeb, letterSpacing = 5.sp)
-        WeSeeText("Seu parceiro pessoal", WeSeeMid, 17, textAlign = TextAlign.Start, fontFamily = IstokWeb)
+        WeSeeText("Navi", WeSeeInk, 48, FontWeight.Bold, textAlign = TextAlign.Start, fontFamily = IstokWeb, letterSpacing = 5.sp)
+        WeSeeText(stringResource(R.string.chat_navi_subtitle), WeSeeMid, 17, textAlign = TextAlign.Start, fontFamily = IstokWeb)
     }
 }
 
 /** Estado inicial: botão circular do microfone (apenas visual por enquanto). Encolhe se a tela for baixa. */
 @Composable
 private fun MicArea() {
+    val micDesc = stringResource(R.string.chat_mic_desc)
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         val diameter = minOf(176.dp, maxHeight - 12.dp).coerceAtLeast(96.dp)
         Box(
             Modifier.size(diameter)
                 .shadow(14.dp, CircleShape, ambientColor = WeSeeBlue.copy(alpha = 0.3f), spotColor = WeSeeBlue.copy(alpha = 0.3f))
                 .clip(CircleShape).background(Brush.verticalGradient(listOf(Color(0xFFEAF3FD), Color(0xFF8DBFFF))))
-                .semantics { contentDescription = "Microfone do Navi. Conversa por voz em breve. Use as sugestões abaixo." },
+                .semantics { contentDescription = micDesc },
             contentAlignment = Alignment.Center,
         ) { Image(painterResource(R.drawable.ic_mic_blue), null, Modifier.size(34.dp)) }
     }
@@ -135,6 +142,8 @@ private fun MicArea() {
 
 @Composable
 private fun Bubble(message: ChatMessage, maxWidth: Dp, announce: Boolean) {
+    val youSaid = stringResource(R.string.chat_you_said)
+    val naviReplied = stringResource(R.string.chat_navi_replied)
     val appear = remember { Animatable(0f) }
     LaunchedEffect(Unit) { appear.animateTo(1f, tween(240)) }
     val user = message.fromUser
@@ -145,24 +154,25 @@ private fun Bubble(message: ChatMessage, maxWidth: Dp, announce: Boolean) {
     ) {
         if (!user) WeSeeText("Navi", WeSeeMid, 11, FontWeight.SemiBold, Modifier.padding(start = 6.dp, bottom = 2.dp), textAlign = TextAlign.Start)
         Box(
-            Modifier.widthIn(max = maxWidth).clip(shape).background(if (user) WeSeeBlue else Color.White)
+            Modifier.widthIn(max = maxWidth).clip(shape).background(if (user) WeSeeBlue else WeSeeSurface)
                 .padding(horizontal = 14.dp, vertical = 10.dp)
                 .semantics {
-                    contentDescription = (if (user) "Você disse: " else "Navi respondeu: ") + message.text
+                    contentDescription = (if (user) youSaid else naviReplied) + message.text
                     if (announce) liveRegion = LiveRegionMode.Polite
                 },
         ) {
-            WeSeeText(message.text, if (user) Color.White else WeSeeDeep, 14, FontWeight.Medium, textAlign = TextAlign.Start, lineHeight = 19)
+            WeSeeText(message.text, if (user) Color.White else WeSeeInkDeep, 14, FontWeight.Medium, textAlign = TextAlign.Start, lineHeight = 19)
         }
     }
 }
 
 @Composable
 private fun TypingBubble() {
+    val typingDesc = stringResource(R.string.chat_typing_desc)
     val transition = rememberInfiniteTransition(label = "typing")
     Row(
-        Modifier.clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)).background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 14.dp).semantics { contentDescription = "Navi está escrevendo" },
+        Modifier.clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)).background(WeSeeSurface)
+            .padding(horizontal = 16.dp, vertical = 14.dp).semantics { contentDescription = typingDesc },
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         repeat(3) { i ->
@@ -176,11 +186,11 @@ private fun TypingBubble() {
 private fun NewChatChip(enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.heightIn(min = 48.dp).alpha(if (enabled) 1f else 0.5f)
-            .clickable(enabled = enabled, role = Role.Button, onClickLabel = "Limpar a conversa e voltar ao início", onClick = onClick),
+            .clickable(enabled = enabled, role = Role.Button, onClickLabel = stringResource(R.string.chat_new_conversation_label), onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.clip(RoundedCornerShape(50)).background(Color.White).padding(horizontal = 14.dp, vertical = 7.dp)) {
-            WeSeeText("Nova conversa", WeSeeBlue, 12, FontWeight.Bold)
+        Box(Modifier.clip(RoundedCornerShape(50)).background(WeSeeSurface).padding(horizontal = 14.dp, vertical = 7.dp)) {
+            WeSeeText(stringResource(R.string.chat_new_conversation), WeSeeInk, 12, FontWeight.Bold)
         }
     }
 }
@@ -214,6 +224,7 @@ private fun Conversation(chat: NaviChatState) {
 
 @Composable
 private fun SuggestionCard(suggestion: ChatSuggestion, height: Dp, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val suggestionDesc = stringResource(R.string.chat_suggestion_desc, stringResource(suggestion.titleRes))
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) 0.96f else 1f, tween(90), label = "press")
@@ -222,11 +233,11 @@ private fun SuggestionCard(suggestion: ChatSuggestion, height: Dp, enabled: Bool
         modifier.height(height).graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(14.dp)).background(background).alpha(if (enabled) 1f else 0.6f)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "Sugestão: ${suggestion.title} Toque para ver a resposta do Navi." }
+            .semantics { contentDescription = suggestionDesc }
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
-        WeSeeText(suggestion.title, Color.White, suggestion.textSizeSp, FontWeight.SemiBold, lineHeight = (suggestion.textSizeSp * 1.25f).toInt())
+        WeSeeText(stringResource(suggestion.titleRes), Color.White, suggestion.textSizeSp, FontWeight.SemiBold, lineHeight = (suggestion.textSizeSp * 1.25f).toInt())
     }
 }
 
@@ -235,7 +246,7 @@ private fun SuggestionCard(suggestion: ChatSuggestion, height: Dp, enabled: Bool
 private fun SuggestionsSection(disabled: Boolean, onPick: (ChatSuggestion) -> Unit) {
     val rowHeights = listOf(56.dp, 64.dp)
     Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 10.dp)) {
-        WeSeeText("Sugestões", WeSeeBlue, 20, modifier = Modifier.fillMaxWidth(), fontFamily = IstokWeb)
+        WeSeeText(stringResource(R.string.chat_suggestions_title), WeSeeInk, 20, modifier = Modifier.fillMaxWidth(), fontFamily = IstokWeb)
         Spacer(Modifier.height(12.dp))
         NaviChatData.rows.forEachIndexed { r, row ->
             if (r > 0) Spacer(Modifier.height(8.dp))
@@ -251,17 +262,18 @@ private fun SuggestionsSection(disabled: Boolean, onPick: (ChatSuggestion) -> Un
 /** Campo de mensagem: mantido na composição, mas DESATIVADO (o Navi só responde pelas sugestões). */
 @Composable
 private fun MessageBar() {
+    val inputDesc = stringResource(R.string.chat_input_disabled_desc)
     val pill = RoundedCornerShape(50)
     Row(
         Modifier.padding(horizontal = 14.dp, vertical = 10.dp).fillMaxWidth().shadow(6.dp, pill).clip(pill)
-            .background(Color.White.copy(alpha = 0.92f)).padding(start = 18.dp, end = 7.dp, top = 7.dp, bottom = 7.dp)
+            .background(WeSeeField.copy(alpha = 0.92f)).padding(start = 18.dp, end = 7.dp, top = 7.dp, bottom = 7.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = "Campo de mensagem desativado. Toque em uma sugestão para conversar com o Navi."
+                contentDescription = inputDesc
                 disabled()
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WeSeeText("Toque em uma sugestão para conversar...", Color(0xFF5F6B78), 12, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
+        WeSeeText(stringResource(R.string.chat_input_hint), WeSeeMid, 12, modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
         Box(Modifier.size(36.dp).clip(CircleShape).background(Color(0xFFB7C6D8)), contentAlignment = Alignment.Center) {
             Image(painterResource(R.drawable.ic_arrow_up), null, Modifier.size(20.dp))
         }
@@ -281,7 +293,7 @@ fun PcdChatScreen(onOpenHome: () -> Unit = {}) {
     // Lê a resposta em voz alta, a menos que o TalkBack já esteja lendo (evita fala duplicada)
     val chat = remember { NaviChatState(scope) { text -> if (!touchExplorationOn(context)) assistant.speak(text) } }
 
-    Column(Modifier.fillMaxSize().background(WeSeeCard)) {
+    Column(Modifier.fillMaxSize().background(WeSeePage)) {
         Box(Modifier.weight(1f).fillMaxWidth()) {
             Glow()
             Column(Modifier.fillMaxSize().statusBarsPadding()) {

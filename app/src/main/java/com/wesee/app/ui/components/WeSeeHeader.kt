@@ -13,6 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
+import com.wesee.app.ui.theme.ThemedImage
+import com.wesee.app.ui.theme.WeSeeAccent
 import com.wesee.app.ui.theme.WeSeeBar
 import com.wesee.app.ui.theme.WeSeeBlue
 
@@ -20,12 +22,12 @@ import com.wesee.app.ui.theme.WeSeeBlue
 @Composable
 fun WeSeeHeader(step: Int, topPadding: Dp = 40.dp) {
     Column(Modifier.fillMaxWidth().padding(top = topPadding), horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(painterResource(R.drawable.wesee_logo), "WeSee", Modifier.height(34.dp))
+        ThemedImage(painterResource(R.drawable.wesee_logo), "WeSee", Modifier.height(34.dp))
         Spacer(Modifier.height(20.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             repeat(3) {
                 Box(Modifier.size(54.dp, 8.dp).clip(RoundedCornerShape(50))
-                    .background(if (it == step) WeSeeBlue else WeSeeBar))
+                    .background(if (it == step) WeSeeAccent else WeSeeBar))
             }
         }
     }

@@ -24,8 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wesee.app.R
 import com.wesee.app.ui.theme.HostGrotesk
-import com.wesee.app.ui.theme.WeSeeBlue
-import com.wesee.app.ui.theme.WeSeeCard
+import com.wesee.app.ui.theme.ThemedImage
+import com.wesee.app.ui.theme.WeSeeInk
+import com.wesee.app.ui.theme.WeSeeMid
+import com.wesee.app.ui.theme.WeSeeSurface
+import com.wesee.app.ui.theme.themed
 
 /** Campo claro com ícone à esquerda; com [isPassword] ganha o botão de mostrar/ocultar senha. */
 @Composable
@@ -39,29 +42,29 @@ fun WeSeeTextField(
     isPassword: Boolean = false,
 ) {
     var visible by remember { mutableStateOf(false) }
-    val textStyle = TextStyle(color = WeSeeBlue, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = HostGrotesk)
+    val textStyle = TextStyle(color = WeSeeInk, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = HostGrotesk)
     Row(
-        modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp)).background(WeSeeCard)
+        modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp)).background(WeSeeSurface)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(painterResource(icon), null, Modifier.size(18.dp))
+        ThemedImage(painterResource(icon), null, Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         BasicTextField(
             value = value, onValueChange = onValueChange, singleLine = true,
-            textStyle = textStyle, cursorBrush = SolidColor(WeSeeBlue),
+            textStyle = textStyle, cursorBrush = SolidColor(WeSeeInk),
             keyboardOptions = KeyboardOptions(keyboardType = if (isPassword) KeyboardType.Password else keyboardType),
             visualTransformation = if (isPassword && !visible) PasswordVisualTransformation() else VisualTransformation.None,
             modifier = Modifier.weight(1f),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
-                    if (value.isEmpty()) androidx.compose.foundation.text.BasicText(placeholder, style = textStyle)
+                    if (value.isEmpty()) androidx.compose.foundation.text.BasicText(placeholder, style = textStyle.copy(color = themed(WeSeeInk, WeSeeMid)))
                     inner()
                 }
             },
         )
         if (isPassword) {
-            Image(
+            ThemedImage(
                 painterResource(if (visible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
                 stringResource(if (visible) R.string.hide_password else R.string.show_password),
                 Modifier.size(20.dp).clickable { visible = !visible },

@@ -101,3 +101,15 @@ O app **não** fala com Nominatim/OSRM: tudo passa pelo backend (`AtlasApi.searc
 - **Rota a pé**: enquanto o backend não confirmar um servidor OSRM com perfil de pedestre (`OSRM_WALKING_CONFIRMED`), o app mostra a mensagem do backend em vez de uma rota. Rota de carro nunca é exibida como caminhada. A rota não garante calçada acessível nem travessia segura.
 - **Home do PCD**: endereço aproximado real (geocodificação reversa). **Compartilhamento**: com o app aberto, o PCD envia a posição a cada ~60 s (`PcdLocationSharing`); o backend só guarda se houver responsável vinculado com permissão de localização. Não há localização em segundo plano.
 - Exibe a atribuição "Dados © colaboradores do OpenStreetMap".
+
+## Idioma, tema e opções do Perfil
+As opções do **Perfil** (PCD e Responsável compartilham `ProfileContent` + `ProfilePages.kt`) abrem páginas por cima do Perfil; o botão voltar do sistema fecha a página.
+- **Idioma** (Português Brasil / English): troca na hora, em todo o app, sem reiniciar e sem mudar o idioma do aparelho. Textos em `res/values/strings.xml` (PT) e `res/values-en/strings.xml` (EN);
+  telas usam `stringResource(...)` e código fora de telas usa `tr(R.string...)`. `WeSeeTheme` fornece um `Context` com o idioma escolhido. Voz (TTS) e reconhecimento de voz seguem o idioma
+  (EN = `Locale.US`; sem a voz instalada, cai para o idioma padrão do aparelho, sem erro). Em inglês, a descrição da cena e as instruções de rota são montadas no app a partir dos dados do backend
+  (`SceneDescriber`, `RouteInstructions`); mensagens de erro/validação enviadas pelo servidor continuam em português.
+- **Aparência** (Claro / Escuro): global e salva. As cores são papéis em `ui/theme/Color.kt` (`LightPalette` = cores originais, `DarkPalette` = paleta escura); os nomes antigos (`WeSeeBlue`...) seguem o tema.
+  Para texto/ícones sobre o fundo do tema use `WeSeeInk`; `WeSeeBlue` é a superfície azul (texto branco por cima). Ícones de uma cor usam `ThemedImage`.
+- **Notificações**: apenas a preferência (liga/desliga, salva). O app ainda NÃO envia notificações reais nem pede permissão de notificações.
+- **Histórico, Termos de uso, Política de privacidade, FAQ**: conteúdo demonstrativo (identificado na tela). **Apagar conta**: só informa que a exclusão ainda não existe (o backend não tem esse recurso).
+- Preferências ficam em `wesee_settings` (`AppSettings`), que não é apagado no logout.

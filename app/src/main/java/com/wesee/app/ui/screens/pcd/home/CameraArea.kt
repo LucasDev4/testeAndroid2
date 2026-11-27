@@ -13,6 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.wesee.app.R
 import com.wesee.app.ui.components.softCard
+import androidx.compose.ui.res.stringResource
+import com.wesee.app.ui.theme.ThemedImage
 
 /**
  * Área da câmera da Home. Mostra o [content] recebido (a Home usa a câmera real com IA: `LiveCameraContent`);
@@ -33,5 +35,5 @@ fun CameraArea(
 
 @Composable
 fun BoxScope.CameraPlaceholder() {
-    Image(painterResource(R.drawable.ic_camera), "Câmera, disponível em breve", Modifier.size(42.dp))
+    ThemedImage(painterResource(R.drawable.ic_camera), stringResource(R.string.cam_placeholder_desc), Modifier.size(42.dp))
 }
