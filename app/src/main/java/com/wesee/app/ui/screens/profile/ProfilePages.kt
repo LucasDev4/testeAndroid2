@@ -312,7 +312,14 @@ private fun FaqItem(question: String, answer: String) {
         }
         if (expanded) {
             Spacer(Modifier.height(8.dp))
-            WeSeeText(answer, WeSeeMid, 13, Modifier.fillMaxWidth(), lineHeight = 19, textAlign = TextAlign.Start)
+            WeSeeText(
+                text = answer,
+                color = WeSeeMid,
+                size = 13,
+                modifier = Modifier.fillMaxWidth(),
+                lineHeight = 19,
+                textAlign = TextAlign.Start,
+            )
         }
     }
 }
