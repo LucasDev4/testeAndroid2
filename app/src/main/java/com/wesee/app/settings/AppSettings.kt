@@ -55,21 +55,20 @@ object AppSettings {
         notificationsEnabled = p.getBoolean(KEY_NOTIFICATIONS, true)
     }
 
-    fun setLanguage(value: AppLanguage) {
-        language = value
-        prefs?.edit()?.putString(KEY_LANGUAGE, value.tag)?.apply()
-    }
-
-    fun setDarkTheme(value: Boolean) {
-        darkTheme = value
-        prefs?.edit()?.putBoolean(KEY_DARK, value)?.apply()
-    }
-
-    /** Só guarda a preferência: o app ainda NÃO envia notificações reais (e por isso não pede a permissão de notificações). */
-    fun setNotificationsEnabled(value: Boolean) {
-        notificationsEnabled = value
-        prefs?.edit()?.putBoolean(KEY_NOTIFICATIONS, value)?.apply()
-    }
+           fun updateLanguage(value: AppLanguage) {
+            language = value
+            prefs?.edit()?.putString(KEY_LANGUAGE, value.tag)?.apply()
+        }
+        
+        fun updateDarkTheme(value: Boolean) {
+            darkTheme = value
+            prefs?.edit()?.putBoolean(KEY_DARK, value)?.apply()
+        }
+        
+        fun updateNotificationsEnabled(value: Boolean) {
+            notificationsEnabled = value
+            prefs?.edit()?.putBoolean(KEY_NOTIFICATIONS, value)?.apply()
+        }
 
     /**
      * Texto no idioma escolhido para código FORA de composables (voz, mensagens de estado, erros de rede...).
